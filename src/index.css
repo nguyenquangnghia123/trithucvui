@@ -1,0 +1,29 @@
+@import "tailwindcss";
+
+/* KaTeX Math Formula Enhancements */
+.katex-display {
+  overflow-x: auto;
+  overflow-y: hidden;
+  padding: 0.5rem 0;
+  margin: 0.75rem 0 !important;
+  text-align: center;
+}
+
+.katex {
+  font-size: 1.08em;
+  text-rendering: auto;
+}
+
+.math-markdown-container .katex-display > .katex {
+  max-width: 100%;
+}
+
+@keyframes battle-shake {
+  0%, 100% { transform: translateX(0); }
+  20%, 60% { transform: translateX(-6px) rotate(-1deg); }
+  40%, 80% { transform: translateX(6px) rotate(1deg); }
+}
+
+.animate-shake {
+  animation: battle-shake 0.4s ease-in-out;
+}

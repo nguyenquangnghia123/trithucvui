@@ -1,0 +1,140 @@
+{
+  "entities": {
+    "userProfile": {
+      "title": "UserProfile",
+      "description": "User profile with level, xp, coins, stats and learning goals",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "fullName": { "type": "string" },
+        "username": { "type": "string" },
+        "email": { "type": "string" },
+        "grade": { "type": "number" },
+        "school": { "type": "string" },
+        "favoriteSubject": { "type": "string" },
+        "learningGoal": { "type": "string" },
+        "avatar": { "type": "string" },
+        "avatarFrame": { "type": "string" },
+        "equippedBackground": { "type": "string" },
+        "equippedOutfit": { "type": "string" },
+        "level": { "type": "number" },
+        "xp": { "type": "number" },
+        "coins": { "type": "number" },
+        "hearts": { "type": "number" },
+        "maxHearts": { "type": "number" },
+        "lastHeartRegenTime": { "type": "number" },
+        "hintsCount": { "type": "number" },
+        "hasTakenPlacementTest": { "type": "boolean" },
+        "initialRecommendedLevel": { "type": "number" },
+        "unlockedAchievements": { "type": "array" },
+        "inventory": { "type": "array" },
+        "subjectStats": { "type": "object" },
+        "totalGamesPlayed": { "type": "number" },
+        "highestStreak": { "type": "number" },
+        "joinedDate": { "type": "string" },
+        "updatedAt": { "type": "string" }
+      },
+      "required": ["id", "username", "email", "grade", "level", "xp", "coins"]
+    },
+    "quizRecord": {
+      "title": "QuizRecord",
+      "description": "Records quiz attempts and test scores",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "userId": { "type": "string" },
+        "gameMode": { "type": "string" },
+        "subject": { "type": "string" },
+        "grade": { "type": "number" },
+        "totalQuestions": { "type": "number" },
+        "correctCount": { "type": "number" },
+        "wrongCount": { "type": "number" },
+        "scorePercent": { "type": "number" },
+        "xpEarned": { "type": "number" },
+        "coinsEarned": { "type": "number" },
+        "timestamp": { "type": "number" },
+        "createdAt": { "type": "string" }
+      },
+      "required": ["id", "userId", "gameMode", "subject", "totalQuestions", "correctCount", "timestamp"]
+    },
+    "questionAnswer": {
+      "title": "QuestionAnswer",
+      "description": "Tracks question history, correct/wrong answers",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "userId": { "type": "string" },
+        "questionId": { "type": "string" },
+        "subject": { "type": "string" },
+        "topic": { "type": "string" },
+        "grade": { "type": "number" },
+        "isCorrect": { "type": "boolean" },
+        "selectedAnswer": { "type": "string" },
+        "correctAnswer": { "type": "string" },
+        "timestamp": { "type": "number" }
+      },
+      "required": ["id", "userId", "questionId", "isCorrect", "timestamp"]
+    },
+    "aiChatHistory": {
+      "title": "AiChatHistory",
+      "description": "Maintains multi-turn AI question-answering history",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "userId": { "type": "string" },
+        "role": { "type": "string" },
+        "text": { "type": "string" },
+        "subject": { "type": "string" },
+        "persona": { "type": "string" },
+        "modelUsed": { "type": "string" },
+        "groundingSources": { "type": "array" },
+        "timestamp": { "type": "number" }
+      },
+      "required": ["id", "userId", "role", "text", "timestamp"]
+    },
+    "generatedQuestion": {
+      "title": "GeneratedQuestion",
+      "description": "AI-generated questions grounded with Google Search data",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "userId": { "type": "string" },
+        "questionId": { "type": "string" },
+        "content": { "type": "string" },
+        "options": { "type": "array" },
+        "correctIndex": { "type": "number" },
+        "explanation": { "type": "string" },
+        "hint": { "type": "string" },
+        "difficulty": { "type": "number" },
+        "subject": { "type": "string" },
+        "grade": { "type": "number" },
+        "topic": { "type": "string" },
+        "groundingSources": { "type": "array" },
+        "timestamp": { "type": "number" }
+      },
+      "required": ["id", "userId", "content", "options", "correctIndex", "explanation", "subject", "grade", "topic", "timestamp"]
+    }
+  },
+  "firestore": {
+    "/users/{userId}": {
+      "schema": "userProfile",
+      "description": "User profile private to each user"
+    },
+    "/users/{userId}/quizRecords/{recordId}": {
+      "schema": "quizRecord",
+      "description": "Test scores and quiz results for the user"
+    },
+    "/users/{userId}/questionAnswers/{answerId}": {
+      "schema": "questionAnswer",
+      "description": "Detailed history of correct and wrong answers per question"
+    },
+    "/users/{userId}/chatHistory/{chatId}": {
+      "schema": "aiChatHistory",
+      "description": "AI tutor chat session history"
+    },
+    "/users/{userId}/generatedQuestions/{qId}": {
+      "schema": "generatedQuestion",
+      "description": "AI-generated grounded questions for unlimited curriculum practice"
+    }
+  }
+}

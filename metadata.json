@@ -1,0 +1,10 @@
+{
+  "name": "Remix Tri Thức Vui - Đấu Trường Học Tập Gamified",
+  "description": "Ứng dụng học tập game hóa toàn diện dành cho học sinh Lớp 1-12 với 8 trò chơi, kiểm tra đầu vào thích ứng, lộ trình học cá nhân hóa, 300 cấp độ và ngân hàng câu hỏi chuẩn kiến thức.",
+  "requestFramePermissions": [
+    "microphone"
+  ],
+  "majorCapabilities": [
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+  ]
+}

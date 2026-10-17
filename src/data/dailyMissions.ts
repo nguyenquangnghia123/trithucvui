@@ -1,0 +1,48 @@
+import { DailyMission } from '../types';
+
+export const INITIAL_DAILY_MISSIONS: DailyMission[] = [
+  {
+    id: 'mission_math_10',
+    title: 'Thần đồng Toán học',
+    description: 'Trả lời đúng ít nhất 5 câu hỏi môn Toán hôm nay.',
+    current: 0,
+    target: 5,
+    rewardCoins: 40,
+    rewardXp: 80,
+    completed: false,
+    claimed: false,
+  },
+  {
+    id: 'mission_english_play',
+    title: 'Giao lưu Quốc tế',
+    description: 'Tham gia 1 lượt chơi bất kỳ ở môn Tiếng Anh.',
+    current: 0,
+    target: 1,
+    rewardCoins: 35,
+    rewardXp: 60,
+    completed: false,
+    claimed: false,
+  },
+  {
+    id: 'mission_streak_5',
+    title: 'Bàn tay vàng',
+    description: 'Đạt chuỗi trả lời đúng 5 câu liên tiếp trong một ván.',
+    current: 0,
+    target: 5,
+    rewardCoins: 50,
+    rewardXp: 90,
+    completed: false,
+    claimed: false,
+  },
+  {
+    id: 'mission_complete_level',
+    title: 'Vượt ải xuất sắc',
+    description: 'Hoàn thành chiến thắng 1 cấp độ trò chơi.',
+    current: 0,
+    target: 1,
+    rewardCoins: 60,
+    rewardXp: 100,
+    completed: false,
+    claimed: false,
+  },
+];

@@ -1,0 +1,166 @@
+import { ShopItem } from '../types';
+
+export const SHOP_ITEMS: ShopItem[] = [
+  // Characters
+  {
+    id: 'char_student',
+    name: 'Học Sinh Chăm Chỉ',
+    category: 'character',
+    price: 0,
+    preview: '🎒',
+    description: 'Bạn học sinh nhiệt huyết, luôn sẵn sàng chinh phục mọi bài tập.',
+    isOwned: true,
+  },
+  {
+    id: 'char_robot',
+    name: 'Robot Thông Thái',
+    category: 'character',
+    price: 150,
+    preview: '🤖',
+    description: 'Trợ lý AI siêu cấp, xử lý tính toán và dữ liệu trong chớp mắt.',
+  },
+  {
+    id: 'char_scientist',
+    name: 'Nhà Khoa Học Nhí',
+    category: 'character',
+    price: 200,
+    preview: '🔬',
+    description: 'Đam mê khám phá các phản ứng hóa học và bí ẩn vũ trụ bao la.',
+  },
+  {
+    id: 'char_astronaut',
+    name: 'Phi Hành Gia Vũ Trụ',
+    category: 'character',
+    price: 250,
+    preview: '🚀',
+    description: 'Chinh phục các vì sao tri thức và bay xa ra ngoài dải ngân hà.',
+  },
+  {
+    id: 'char_coder',
+    name: 'Lập Trình Viên Tương Lai',
+    category: 'character',
+    price: 220,
+    preview: '💻',
+    description: 'Kiến trúc sư công nghệ, viết nên những dòng mã kỳ diệu.',
+  },
+  {
+    id: 'char_wizard',
+    name: 'Phù Thủy Tri Thức',
+    category: 'character',
+    price: 300,
+    preview: '🧙‍♂️',
+    description: 'Sở hữu phép thuật giải đố thần sầu và trí tuệ huyền bí.',
+  },
+
+  // Outfits / Accessories
+  {
+    id: 'outfit_champion_shirt',
+    name: 'Áo Đấu Vô Địch',
+    category: 'outfit',
+    price: 100,
+    preview: '👕',
+    description: 'Khoác lên mình chiếc áo rực lửa dành riêng cho quán quân đấu trường.',
+  },
+  {
+    id: 'outfit_grad_cap',
+    name: 'Mũ Cử Nhân Tri Thức',
+    category: 'outfit',
+    price: 120,
+    preview: '🎓',
+    description: 'Biểu tượng của học vấn uyên bác và sự nỗ lực không ngừng nghỉ.',
+  },
+  {
+    id: 'outfit_speed_shoes',
+    name: 'Giày Thể Thao Siêu Tốc',
+    category: 'outfit',
+    price: 90,
+    preview: '👟',
+    description: 'Giúp tăng tốc phản xạ và về đích ngoạn mục trong cuộc đua tri thức.',
+  },
+  {
+    id: 'outfit_adventure_backpack',
+    name: 'Ba Lô Thám Hiểm',
+    category: 'outfit',
+    price: 80,
+    preview: '🎒',
+    description: 'Chứa đựng la bàn, kính lúp và bảo bối hỗ trợ vượt qua mọi mê cung.',
+  },
+
+  // Avatar Frames
+  {
+    id: 'frame_gold_crown',
+    name: 'Khung Hoàng Gia Vàng',
+    category: 'frame',
+    price: 150,
+    preview: '👑',
+    description: 'Viền vàng kim lấp lánh khẳng định đẳng cấp cao thủ học đường.',
+  },
+  {
+    id: 'frame_cyber_neon',
+    name: 'Khung Neon Tương Lai',
+    category: 'frame',
+    price: 130,
+    preview: '⚡',
+    description: 'Dải sáng neon cyan & tím chuyển động hiện đại đậm chất công nghệ số.',
+  },
+  {
+    id: 'frame_green_sprout',
+    name: 'Khung Mầm Xanh Hy Vọng',
+    category: 'frame',
+    price: 70,
+    preview: '🌱',
+    description: 'Cành lá xanh tươi tốt tượng trưng cho sự tiến bộ từng ngày.',
+  },
+  {
+    id: 'frame_flame',
+    name: 'Khung Ngọn Lửa Bất Diệt',
+    category: 'frame',
+    price: 140,
+    preview: '🔥',
+    description: 'Ngọn lửa đam mê học hỏi không bao giờ tắt.',
+  },
+
+  // Backgrounds
+  {
+    id: 'bg_space',
+    name: 'Không Gian Vũ Trụ',
+    category: 'background',
+    price: 120,
+    preview: '🌌',
+    description: 'Dải ngân hà sâu thẳm đầy sao lung linh cho hồ sơ cá nhân.',
+  },
+  {
+    id: 'bg_library',
+    name: 'Thư Viện Ma Thuật',
+    category: 'background',
+    price: 110,
+    preview: '📚',
+    description: 'Không gian ấm cúng ngập tràn hàng ngàn cuốn sách quý giá.',
+  },
+  {
+    id: 'bg_campus',
+    name: 'Sân Trường Nắng Mới',
+    category: 'background',
+    price: 90,
+    preview: '🏫',
+    description: 'Bầu trời trong xanh và hàng cây rợp bóng mát yêu dấu.',
+  },
+
+  // Hints
+  {
+    id: 'hint_single',
+    name: '1 Thẻ Gợi Ý Trí Tuệ',
+    category: 'hint',
+    price: 30,
+    preview: '💡',
+    description: 'Dùng trong trận đấu để loại bỏ bớt 1-2 đáp án sai hoặc nhận lời gợi ý giải thích.',
+  },
+  {
+    id: 'hint_triple',
+    name: 'Gói 3 Thẻ Gợi Ý',
+    category: 'hint',
+    price: 80,
+    preview: '💡💡💡',
+    description: 'Tiết kiệm hơn khi mua theo gói 3 thẻ hỗ trợ tư duy suy luận.',
+  },
+];

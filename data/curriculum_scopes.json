@@ -1,0 +1,126 @@
+[
+  {
+    "id": "scope_toan_lop6_kntt",
+    "subject": "toan",
+    "grade": 6,
+    "textbook": "Kết nối tri thức với cuộc sống (Bộ GD&ĐT)",
+    "description": "Chương 1: Tập hợp các số tự nhiên - Chuẩn khung chương trình GDPT 2018",
+    "disallowedTopics": [
+      "Số thập phân vô hạn tuần hoàn",
+      "Căn bậc hai",
+      "Hàm số đồ thị"
+    ],
+    "lessons": [
+      {
+        "lessonNumber": 1,
+        "title": "Bài 1: Tập hợp. Phần tử của tập hợp",
+        "coreKnowledge": "Khái niệm tập hợp, cách viết tập hợp bằng liệt kê hoặc chỉ ra tính chất đặc trưng, ký hiệu thuộc và không thuộc.",
+        "allowedConcepts": [
+          "Tập hợp",
+          "Phần tử",
+          "Ký hiệu thuộc (∈)",
+          "Ký hiệu không thuộc (∉)",
+          "Tập rỗng (∅)",
+          "Liệt kê phần tử"
+        ],
+        "allowedFormulas": [
+          "$x \\in A$",
+          "$y \\notin A$",
+          "$A = \\{x \\in \\mathbb{N} \\mid ...\\}$"
+        ],
+        "allowedQuestionTypes": [
+          "Nhận biết phần tử thuộc/không thuộc",
+          "Viết tập hợp",
+          "Đếm số phần tử"
+        ]
+      },
+      {
+        "lessonNumber": 2,
+        "title": "Bài 2: Tập hợp các số tự nhiên. Ghi số tự nhiên",
+        "coreKnowledge": "Tập hợp N và N*, biểu diễn số tự nhiên trên tia số, cấu tạo thập phân, chữ số La Mã.",
+        "allowedConcepts": [
+          "Tập N",
+          "Tập N*",
+          "Tia số",
+          "Số liền trước, liền sau",
+          "Hệ thập phân",
+          "Chữ số La Mã (I, V, X)"
+        ],
+        "allowedFormulas": [
+          "$\\mathbb{N} = \\{0, 1, 2, ...\\}$",
+          "$\\mathbb{N}^* = \\{1, 2, 3, ...\\}$"
+        ],
+        "allowedQuestionTypes": [
+          "Đọc viết số La Mã",
+          "Tìm số liền trước/sau"
+        ]
+      },
+      {
+        "lessonNumber": 3,
+        "title": "Bài 3: Phép cộng và phép trừ số tự nhiên",
+        "coreKnowledge": "Tính chất giao hoán, kết hợp của phép cộng, quan hệ giữa phép cộng và trừ.",
+        "allowedConcepts": [
+          "Số hạng",
+          "Tổng",
+          "Số bị trừ",
+          "Số trừ",
+          "Hiệu",
+          "Giao hoán",
+          "Kết hợp"
+        ],
+        "allowedFormulas": [
+          "$a + b = b + a$",
+          "$(a + b) + c = a + (b + c)$"
+        ],
+        "allowedQuestionTypes": [
+          "Tính nhanh nhóm số hạng",
+          "Tìm x"
+        ]
+      },
+      {
+        "lessonNumber": 4,
+        "title": "Bài 4: Phép nhân và phép chia số tự nhiên",
+        "coreKnowledge": "Tính chất giao hoán, kết hợp, phân phối của phép nhân; phép chia hết và chia có dư.",
+        "allowedConcepts": [
+          "Thừa số",
+          "Tích",
+          "Số bị chia",
+          "Số chia",
+          "Thương",
+          "Số dư (r < b)"
+        ],
+        "allowedFormulas": [
+          "$a \\cdot (b + c) = a \\cdot b + a \\cdot c$",
+          "$a = b \\cdot q + r \\quad (0 \\le r < b)$"
+        ],
+        "allowedQuestionTypes": [
+          "Tính nhanh",
+          "Tìm số dư"
+        ]
+      },
+      {
+        "lessonNumber": 5,
+        "title": "Bài 5: Lũy thừa với số mũ tự nhiên",
+        "coreKnowledge": "Khái niệm lũy thừa a^n, nhân và chia hai lũy thừa cùng cơ số, quy ước a^0 = 1.",
+        "allowedConcepts": [
+          "Cơ số",
+          "Số mũ",
+          "Bình phương",
+          "Lập phương",
+          "Nhân cùng cơ số",
+          "Chia cùng cơ số"
+        ],
+        "allowedFormulas": [
+          "$a^m \\cdot a^n = a^{m+n}$",
+          "$a^m : a^n = a^{m-n} \\quad (m \\ge n)$"
+        ],
+        "allowedQuestionTypes": [
+          "Tính lũy thừa",
+          "Tìm x có số mũ"
+        ]
+      }
+    ],
+    "createdAt": "2026-10-16T23:58:02.915Z",
+    "updatedAt": "2026-10-16T23:58:02.915Z"
+  }
+]

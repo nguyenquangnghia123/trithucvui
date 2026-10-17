@@ -1,0 +1,17 @@
+[
+  {
+    "id": "rep_1792195115813_u0gin",
+    "questionContent": "Tìm x biết x + 5 = 12",
+    "selectedOptionText": "x = 7",
+    "correctAnswerText": "x = 7",
+    "subject": "toan",
+    "grade": 6,
+    "studentComment": "Em chọn x = 7 là đáp án đúng mà hệ thống lại trừ tim của em",
+    "status": "RESOLVED_VALID_APPEAL",
+    "resolutionNotes": "Học sinh đã chọn đúng phương án \"x = 7\", trùng khớp hoàn toàn với đáp án chuẩn. Hệ thống xác nhận đây là câu trả lời chính xác!",
+    "refundedHeart": true,
+    "compensatedXp": 50,
+    "compensatedCoins": 30,
+    "timestamp": 1792195115813
+  }
+]
