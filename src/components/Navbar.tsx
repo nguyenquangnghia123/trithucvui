@@ -18,7 +18,8 @@ import {
   Trophy,
   Search,
   Bot,
-  ShieldCheck
+  ShieldCheck,
+  Flame
 } from 'lucide-react';
 
 interface NavbarProps {
@@ -46,6 +47,7 @@ export const Navbar: React.FC<NavbarProps> = ({
 }) => {
   const [soundEnabled, setSoundEnabled] = useState(soundManager.isEnabled());
   const [showHeartInfo, setShowHeartInfo] = useState(false);
+  const [showStreakInfo, setShowStreakInfo] = useState(false);
 
   const handleNav = (tab: string) => {
     if (onNavigate) onNavigate(tab);
@@ -173,6 +175,91 @@ export const Navbar: React.FC<NavbarProps> = ({
                       Nghỉ ngơi 1 phút & Hồi đầy tim
                     </button>
                   )}
+                </div>
+              )}
+            </div>
+
+            {/* Visual Daily Streak Counter with Flame Icon */}
+            <div className="relative">
+              <button
+                onClick={() => {
+                  setShowStreakInfo(!showStreakInfo);
+                  setShowHeartInfo(false);
+                }}
+                id="nav-daily-streak-btn"
+                className="flex items-center gap-1.5 bg-gradient-to-r from-orange-50 via-amber-50 to-orange-50 hover:from-orange-100 hover:to-amber-100 border border-orange-200/90 px-2.5 py-1 rounded-xl cursor-pointer transition-all shadow-xs group"
+                title="Chuỗi ngày học liên tục (Daily Streak) - Bấm để xem chi tiết"
+              >
+                <div className="relative flex items-center justify-center">
+                  <Flame className="w-4 h-4 text-orange-500 fill-orange-500 group-hover:scale-110 transition-transform animate-pulse" />
+                  <span className="absolute -top-0.5 -right-0.5 w-1.5 h-1.5 rounded-full bg-amber-400 animate-ping opacity-75" />
+                </div>
+                <div className="flex items-baseline gap-0.5">
+                  <span className="text-xs sm:text-sm font-black text-orange-900 tracking-tight">
+                    {user.dailyStreak || 1}
+                  </span>
+                  <span className="text-[10px] font-bold text-orange-600 hidden sm:inline">
+                    ngày
+                  </span>
+                </div>
+              </button>
+
+              {/* Daily Streak Dropdown Popover */}
+              {showStreakInfo && (
+                <div className="absolute right-0 sm:left-1/2 sm:-translate-x-1/2 mt-2 w-72 p-4 bg-white rounded-2xl shadow-xl border border-orange-200 z-50 animate-in fade-in slide-in-from-top-2">
+                  <div className="flex items-center justify-between mb-2">
+                    <h4 className="font-extrabold text-slate-800 text-sm flex items-center gap-1.5">
+                      <Flame className="w-4 h-4 text-orange-500 fill-orange-500" />
+                      Chuỗi Ngày Học Liên Tục
+                    </h4>
+                    <span className="text-[11px] px-2 py-0.5 rounded-full bg-orange-100 text-orange-800 font-bold border border-orange-200">
+                      🔥 {user.dailyStreak || 1} ngày
+                    </span>
+                  </div>
+                  <p className="text-xs text-slate-600 mb-3">
+                    Duy trì việc học tập mỗi ngày để thắp sáng ngọn lửa tri thức và tăng tốc thăng cấp!
+                  </p>
+
+                  {/* 7-day visual tracker */}
+                  <div className="bg-orange-50/70 border border-orange-100 rounded-xl p-2.5 mb-3">
+                    <div className="flex justify-between items-center text-[10px] font-bold text-orange-800 mb-1.5">
+                      <span>Tiến độ tuần này</span>
+                      <span>Kỷ lục: {Math.max(user.highestStreak || 0, user.dailyStreak || 1)} ngày</span>
+                    </div>
+                    <div className="grid grid-cols-7 gap-1">
+                      {['T2', 'T3', 'T4', 'T5', 'T6', 'T7', 'CN'].map((day, idx) => {
+                        const streakCount = user.dailyStreak || 1;
+                        const currentDayIndex = (new Date().getDay() + 6) % 7; // Monday = 0, Sunday = 6
+                        const isToday = idx === currentDayIndex;
+                        const isActive = isToday || (idx < currentDayIndex && (currentDayIndex - idx) < streakCount);
+                        return (
+                          <div
+                            key={day}
+                            className={`flex flex-col items-center justify-center p-1 rounded-lg border text-center transition-all ${
+                              isToday
+                                ? 'bg-gradient-to-b from-orange-500 to-amber-500 text-white border-orange-400 shadow-xs'
+                                : isActive
+                                ? 'bg-orange-100 text-orange-800 border-orange-200 font-bold'
+                                : 'bg-white text-slate-400 border-slate-100'
+                            }`}
+                          >
+                            <span className="text-[9px] font-semibold">{day}</span>
+                            <span className="text-xs mt-0.5">
+                              {isActive ? '🔥' : '⚪'}
+                            </span>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+
+                  <div className="flex items-center justify-between text-xs text-slate-500 pt-2 border-t border-slate-100">
+                    <span>Hôm nay:</span>
+                    <span className="font-bold text-emerald-600 flex items-center gap-1">
+                      <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+                      Đang duy trì ngọn lửa!
+                    </span>
+                  </div>
                 </div>
               )}
             </div>

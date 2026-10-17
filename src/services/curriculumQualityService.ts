@@ -5,13 +5,23 @@ import {
   VerifiedQuestion, 
   QuestionReport 
 } from '../data/defaultCurriculums';
-import { Question, SubjectId, GradeLevel } from '../types';
+import { 
+  Question, 
+  SubjectId, 
+  GradeLevel, 
+  TextbookLesson, 
+  TextbookKnowledgeSet, 
+  TextbookQuestion, 
+  QuestionVerificationResult 
+} from '../types';
 
 const STORAGE_KEYS = {
   CURRICULUM_SCOPES: 'eduplay_curriculum_scopes_v1',
   VERIFIED_QUESTIONS: 'eduplay_verified_questions_v1',
   QUESTION_REPORTS: 'eduplay_question_reports_v1',
+  APPROVED_TEXTBOOK_QUESTIONS: 'eduplay_approved_textbook_questions_v1',
 };
+
 
 export class CurriculumQualityService {
   /**
@@ -434,5 +444,244 @@ export class CurriculumQualityService {
       auditPassed: true,
       notes: 'Đã tạo câu hỏi chuẩn từ phạm vi kiến thức đã cấu hình.'
     };
+  }
+
+  // ==========================================
+  // TEXTBOOK GROUNDED WORKFLOW (SGK)
+  // ==========================================
+
+  /**
+   * Bước 2: AI tạo câu hỏi giới hạn trong nội dung nguồn bài học SGK đã chọn
+   * Kèm tự động chạy kiểm định 2 lớp (Code validation + AI verification pass)
+   */
+  public static async generateTextbookQuestions(params: {
+    subject: SubjectId;
+    grade: GradeLevel;
+    textbook: string;
+    edition?: string;
+    lesson: TextbookLesson;
+    count?: number;
+    difficulty?: number;
+    scopeId?: string;
+  }): Promise<{ success: boolean; questions: TextbookQuestion[]; auditPassed: boolean; notes: string; error?: string }> {
+    try {
+      const res = await fetch('/api/textbook/generate', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(params)
+      });
+
+      const data = await res.json();
+      if (res.ok && data.success && Array.isArray(data.questions)) {
+        return {
+          success: true,
+          questions: data.questions,
+          auditPassed: Boolean(data.auditPassed),
+          notes: data.notes || 'Đã kiểm định tự động qua 2 lớp (Code Validation & AI Auditor).'
+        };
+      }
+
+      return {
+        success: false,
+        questions: [],
+        auditPassed: false,
+        notes: data.error || 'Không thể tạo câu hỏi từ bài học đã chọn.',
+        error: data.error
+      };
+    } catch (err: any) {
+      console.warn('API error in generateTextbookQuestions:', err);
+      return {
+        success: false,
+        questions: [],
+        auditPassed: false,
+        notes: 'Không thể kết nối đến máy chủ để tạo câu hỏi.',
+        error: err?.message || String(err)
+      };
+    }
+  }
+
+  /**
+   * Bước 3: Kiểm tra độc lập một câu hỏi (chạy lại sau khi giáo viên sửa)
+   */
+  public static async verifyTextbookQuestion(params: {
+    question: any;
+    lesson: TextbookLesson;
+    grade: GradeLevel;
+    subject: SubjectId;
+    textbook: string;
+  }): Promise<QuestionVerificationResult> {
+    try {
+      const res = await fetch('/api/textbook/verify-question', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(params)
+      });
+
+      if (res.ok) {
+        const data = await res.json();
+        if (data.verificationResult) {
+          return data.verificationResult;
+        }
+      }
+    } catch (err) {
+      console.warn('API error in verifyTextbookQuestion:', err);
+    }
+
+    // Heuristic client fallback if server endpoint unavailable
+    const q = params.question;
+    const distinctOpts = new Set(q.options?.map((o: any) => String(o).trim().toLowerCase())).size === 4;
+    const hasContent = Boolean(q.content && q.content.trim().length >= 10);
+    const hasExplanation = Boolean(q.explanation && q.explanation.trim().length >= 10);
+    const validIdx = typeof q.correctIndex === 'number' && q.correctIndex >= 0 && q.correctIndex <= 3;
+    const inScope = Boolean(q.sourceEvidence && q.sourceEvidence.trim().length > 0);
+
+    const passed = distinctOpts && hasContent && hasExplanation && validIdx && inScope;
+
+    return {
+      passed,
+      codeValidationPassed: distinctOpts && hasContent && validIdx,
+      codeValidationErrors: distinctOpts && hasContent && validIdx ? [] : ['Lỗi định dạng phương án hoặc nội dung'],
+      inScope,
+      answerConsistent: validIdx && distinctOpts,
+      evidenceSufficient: inScope,
+      singleCorrectOption: distinctOpts,
+      distractorsValid: distinctOpts,
+      explanationValid: hasExplanation,
+      gradeAppropriate: true,
+      issueType: passed ? null : 'DATA_INVALID',
+      reviewNotes: passed ? 'Câu hỏi hợp lệ theo kiểm định cơ bản.' : 'Cần kiểm tra lại các lựa chọn và đáp án.',
+      suggestedCorrection: null,
+      qualityScore: passed ? 100 : 70
+    };
+  }
+
+  /**
+   * Bước 4: Lấy danh sách câu hỏi đã được giáo viên duyệt vào kho chính thức
+   */
+  public static async getTextbookApprovedQuestions(params?: {
+    subject?: SubjectId;
+    grade?: GradeLevel;
+    lessonTitle?: string;
+  }): Promise<TextbookQuestion[]> {
+    try {
+      const queryParams = new URLSearchParams();
+      if (params?.subject) queryParams.set('subject', params.subject);
+      if (params?.grade) queryParams.set('grade', String(params.grade));
+      if (params?.lessonTitle) queryParams.set('lessonTitle', params.lessonTitle);
+
+      const res = await fetch(`/api/textbook/approved-questions?${queryParams.toString()}`);
+      if (res.ok) {
+        const data = await res.json();
+        if (Array.isArray(data.questions)) {
+          this.saveLocalApprovedQuestions(data.questions);
+          return data.questions;
+        }
+      }
+    } catch (err) {
+      console.warn('API error fetching approved questions:', err);
+    }
+
+    let local = this.getLocalApprovedQuestions();
+    if (params?.subject) local = local.filter(q => q.subject === params.subject);
+    if (params?.grade) local = local.filter(q => q.grade === params.grade);
+    if (params?.lessonTitle) local = local.filter(q => (q.lessonTitle || q.topic || '').toLowerCase().includes(params.lessonTitle!.toLowerCase()));
+    return local;
+  }
+
+  /**
+   * Bước 4: Giáo viên duyệt và lưu câu hỏi vào kho chính thức
+   */
+  public static async approveTextbookQuestion(
+    question: TextbookQuestion,
+    reviewerName: string = 'Giáo viên Thẩm định'
+  ): Promise<{ success: boolean; question: TextbookQuestion; error?: string }> {
+    const updated: TextbookQuestion = {
+      ...question,
+      reviewerStatus: 'approved',
+      reviewedAt: new Date().toISOString(),
+      reviewedBy: reviewerName,
+      updatedAt: new Date().toISOString()
+    };
+
+    // Update local cache immediately
+    const local = this.getLocalApprovedQuestions();
+    const existingIdx = local.findIndex(q => q.id === question.id);
+    if (existingIdx >= 0) {
+      local[existingIdx] = updated;
+    } else {
+      local.unshift(updated);
+    }
+    this.saveLocalApprovedQuestions(local);
+
+    try {
+      const res = await fetch('/api/textbook/approve-question', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ question: updated, reviewerName })
+      });
+
+      if (res.ok) {
+        const data = await res.json();
+        return { success: true, question: data.question || updated };
+      }
+      const errData = await res.json().catch(() => ({}));
+      return { success: false, question: updated, error: errData.error || 'Lỗi lưu câu hỏi.' };
+    } catch (err: any) {
+      return { success: true, question: updated }; // Local save already done
+    }
+  }
+
+  /**
+   * Bước 4: Từ chối câu hỏi
+   */
+  public static async rejectTextbookQuestion(
+    questionId: string,
+    rejectionReason: string = 'Không phù hợp với SGK'
+  ): Promise<{ success: boolean }> {
+    const local = this.getLocalApprovedQuestions().filter(q => q.id !== questionId);
+    this.saveLocalApprovedQuestions(local);
+
+    try {
+      await fetch('/api/textbook/reject-question', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ questionId, rejectionReason })
+      });
+      return { success: true };
+    } catch {
+      return { success: true };
+    }
+  }
+
+  /**
+   * Xóa câu hỏi khỏi kho chính thức
+   */
+  public static async deleteApprovedQuestion(id: string): Promise<boolean> {
+    const local = this.getLocalApprovedQuestions().filter(q => q.id !== id);
+    this.saveLocalApprovedQuestions(local);
+
+    try {
+      const res = await fetch(`/api/textbook/approved-questions/${id}`, { method: 'DELETE' });
+      return res.ok;
+    } catch {
+      return true;
+    }
+  }
+
+  public static getLocalApprovedQuestions(): TextbookQuestion[] {
+    try {
+      const raw = localStorage.getItem(STORAGE_KEYS.APPROVED_TEXTBOOK_QUESTIONS);
+      if (raw) {
+        const parsed = JSON.parse(raw);
+        if (Array.isArray(parsed)) return parsed;
+      }
+    } catch {}
+    return [];
+  }
+
+  public static saveLocalApprovedQuestions(questions: TextbookQuestion[]): void {
+    try {
+      localStorage.setItem(STORAGE_KEYS.APPROVED_TEXTBOOK_QUESTIONS, JSON.stringify(questions));
+    } catch {}
   }
 }

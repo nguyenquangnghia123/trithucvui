@@ -53,6 +53,24 @@ if (sessionGeneratedQuestions.length > 0) {
   });
 }
 
+// Seed official approved textbook questions into dynamic pool
+if (typeof window !== 'undefined' && window.localStorage) {
+  try {
+    const rawApproved = localStorage.getItem('eduplay_approved_textbook_questions_v1');
+    if (rawApproved) {
+      const parsed = JSON.parse(rawApproved);
+      if (Array.isArray(parsed)) {
+        parsed.filter((q) => q && q.reviewerStatus === 'approved').forEach((q) => {
+          if (!dynamicQuestionPool.some((existing) => existing.id === q.id)) {
+            dynamicQuestionPool.unshift(q);
+          }
+        });
+      }
+    }
+  } catch {}
+}
+
+
 /**
  * Get all questions generated in the current learning session
  */

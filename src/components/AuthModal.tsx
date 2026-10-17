@@ -174,6 +174,8 @@ export const AuthModal: React.FC<AuthModalProps> = ({
           },
           totalGamesPlayed: 0,
           highestStreak: 0,
+          dailyStreak: 1,
+          lastActiveDate: new Date().toISOString().split('T')[0],
           joinedDate: new Date().toISOString().split('T')[0]
         };
       } else {
@@ -299,6 +301,8 @@ export const AuthModal: React.FC<AuthModalProps> = ({
           },
           totalGamesPlayed: 0,
           highestStreak: 0,
+          dailyStreak: 1,
+          lastActiveDate: new Date().toISOString().split('T')[0],
           joinedDate: new Date().toISOString().split('T')[0],
         };
       }
@@ -418,6 +422,8 @@ export const AuthModal: React.FC<AuthModalProps> = ({
         },
         totalGamesPlayed: 0,
         highestStreak: 0,
+        dailyStreak: 1,
+        lastActiveDate: new Date().toISOString().split('T')[0],
         joinedDate: new Date().toISOString().split('T')[0],
       };
 

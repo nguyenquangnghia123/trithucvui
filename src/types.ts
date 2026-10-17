@@ -104,6 +104,8 @@ export interface UserProfile {
   subjectStats: Record<SubjectId, SubjectStats>;
   totalGamesPlayed: number;
   highestStreak: number;
+  dailyStreak: number;
+  lastActiveDate?: string;
   joinedDate: string;
   questionHistory?: string[]; // IDs of answered questions for no-repeat logic
   wrongQuestionsHistory?: { questionId: string; subject: SubjectId; topic: string; timestamp: number }[];
@@ -200,3 +202,83 @@ export interface QuizResult {
   leveledUp: boolean;
   newLevel: number;
 }
+
+// ==========================================
+// QUY TRÌNH TẠO, KIỂM TRA & LƯU CÂU HỎI BÁM SÁT SGK
+// ==========================================
+
+export interface TextbookLesson {
+  lessonNumber: number;
+  title: string;
+  coreKnowledge: string;
+  pageReference?: string;
+  allowedConcepts?: string[];
+  allowedFormulas?: string[];
+}
+
+export interface TextbookKnowledgeSet {
+  id: string;
+  subject: SubjectId;
+  grade: GradeLevel;
+  textbook: string;
+  edition?: string;
+  description?: string;
+  lessons: TextbookLesson[];
+  disallowedTopics?: string[];
+  createdAt: string;
+  updatedAt: string;
+}
+
+export type QuestionVerificationStatus = 'pending_verification' | 'passed_review' | 'flagged' | 'rejected';
+export type QuestionReviewerStatus = 'pending_review' | 'approved' | 'rejected';
+
+export interface QuestionVerificationResult {
+  passed: boolean;
+  codeValidationPassed: boolean;
+  codeValidationErrors: string[];
+  inScope: boolean;
+  answerConsistent: boolean;
+  evidenceSufficient: boolean;
+  singleCorrectOption: boolean;
+  distractorsValid: boolean;
+  explanationValid: boolean;
+  gradeAppropriate: boolean;
+  issueType?: 'OUT_OF_SCOPE' | 'WRONG_ANSWER' | 'MULTIPLE_CORRECT' | 'NO_CORRECT' | 'CONTRADICTORY_EXPLANATION' | 'INSUFFICIENT_EVIDENCE' | 'AMBIGUOUS' | 'DATA_INVALID' | null;
+  reviewNotes: string;
+  suggestedCorrection?: {
+    correctedIndex?: number;
+    explanation?: string;
+    notes?: string;
+  } | null;
+  qualityScore: number;
+}
+
+export interface TextbookQuestion {
+  id: string;
+  grade: GradeLevel;
+  subject: SubjectId;
+  topic: string;
+  content: string;
+  options: string[];
+  correctIndex: number;
+  correctAnswerText: string;
+  explanation: string;
+  hint?: string;
+  textbook: string;
+  edition?: string;
+  lessonNumber: number;
+  lessonTitle: string;
+  pageReference?: string;
+  sourceEvidence: string;
+  sourceKnowledgeSetId?: string;
+  verificationStatus: QuestionVerificationStatus;
+  verificationResult?: QuestionVerificationResult;
+  qualityScore?: number;
+  reviewerStatus: QuestionReviewerStatus;
+  reviewedAt?: string;
+  reviewedBy?: string;
+  rejectionReason?: string;
+  createdAt: string;
+  updatedAt?: string;
+}
+

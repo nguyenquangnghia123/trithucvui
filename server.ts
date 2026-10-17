@@ -1269,64 +1269,65 @@ BẮT BUỘC TUÂN THỦ CÁC TIÊU CHUẨN ĐỘ KHÓ SAU:
 });
 
 // ==========================================
-// CURRICULUM SCOPE & QUALITY AUDIT REPOSITORY
+// QUY TRÌNH TẠO, KIỂM TRA & LƯU CÂU HỎI BÁM SÁT SGK
 // ==========================================
 const CURRICULUM_SCOPES_FILE = path.join(DATA_DIR, 'curriculum_scopes.json');
 const QUESTION_REPORTS_FILE = path.join(DATA_DIR, 'question_reports.json');
+const APPROVED_QUESTIONS_FILE = path.join(DATA_DIR, 'approved_textbook_questions.json');
 
 function getStoredCurriculumScopes(): any[] {
   try {
     ensureAuthDir();
     if (!fs.existsSync(CURRICULUM_SCOPES_FILE)) {
-      // Seed initial default scope from file or fallback
       const defaultData = [
         {
           id: 'scope_toan_lop6_kntt',
           subject: 'toan',
           grade: 6,
           textbook: 'Kết nối tri thức với cuộc sống (Bộ GD&ĐT)',
+          edition: '2024-2025',
           description: 'Chương 1: Tập hợp các số tự nhiên - Chuẩn khung chương trình GDPT 2018',
           disallowedTopics: ['Số thập phân vô hạn tuần hoàn', 'Căn bậc hai', 'Hàm số đồ thị'],
           lessons: [
             {
               lessonNumber: 1,
               title: 'Bài 1: Tập hợp. Phần tử của tập hợp',
-              coreKnowledge: 'Khái niệm tập hợp, cách viết tập hợp bằng liệt kê hoặc chỉ ra tính chất đặc trưng, ký hiệu thuộc và không thuộc.',
+              coreKnowledge: 'Khái niệm tập hợp, các phần tử của tập hợp. Cách viết tập hợp bằng cách liệt kê các phần tử hoặc chỉ ra tính chất đặc trưng cho các phần tử của tập hợp đó. Sử dụng các ký hiệu thuộc (∈) và không thuộc (∉). Tập hợp không chứa phần tử nào gọi là tập rỗng (∅).',
+              pageReference: 'Trang 6-9 SGK Toán 6 Tập 1',
               allowedConcepts: ['Tập hợp', 'Phần tử', 'Ký hiệu thuộc (∈)', 'Ký hiệu không thuộc (∉)', 'Tập rỗng (∅)', 'Liệt kê phần tử'],
-              allowedFormulas: ['$x \\in A$', '$y \\notin A$', '$A = \\{x \\in \\mathbb{N} \\mid ...\\}$'],
-              allowedQuestionTypes: ['Nhận biết phần tử thuộc/không thuộc', 'Viết tập hợp', 'Đếm số phần tử']
+              allowedFormulas: ['$x \\in A$', '$y \\notin A$', '$A = \\{x \\in \\mathbb{N} \\mid ...\\}$']
             },
             {
               lessonNumber: 2,
               title: 'Bài 2: Tập hợp các số tự nhiên. Ghi số tự nhiên',
-              coreKnowledge: 'Tập hợp N và N*, biểu diễn số tự nhiên trên tia số, cấu tạo thập phân, chữ số La Mã.',
+              coreKnowledge: 'Tập hợp các số tự nhiên được ký hiệu là N = {0, 1, 2, 3, ...}. Tập hợp các số tự nhiên khác 0 ký hiệu là N* = {1, 2, 3, ...}. Mỗi số tự nhiên được biểu diễn bởi một điểm trên tia số. Trong hai số tự nhiên khác nhau có một số nhỏ hơn số kia. Ghi số tự nhiên trong hệ thập phân và ghi bằng chữ số La Mã từ 1 đến 30 (I, V, X).',
+              pageReference: 'Trang 10-13 SGK Toán 6 Tập 1',
               allowedConcepts: ['Tập N', 'Tập N*', 'Tia số', 'Số liền trước, liền sau', 'Hệ thập phân', 'Chữ số La Mã (I, V, X)'],
-              allowedFormulas: ['$\\mathbb{N} = \\{0, 1, 2, ...\\}$', '$\\mathbb{N}^* = \\{1, 2, 3, ...\\}$'],
-              allowedQuestionTypes: ['Đọc viết số La Mã', 'Tìm số liền trước/sau']
+              allowedFormulas: ['$\\mathbb{N} = \\{0, 1, 2, ...\\}$', '$\\mathbb{N}^* = \\{1, 2, 3, ...\\}$']
             },
             {
               lessonNumber: 3,
               title: 'Bài 3: Phép cộng và phép trừ số tự nhiên',
-              coreKnowledge: 'Tính chất giao hoán, kết hợp của phép cộng, quan hệ giữa phép cộng và trừ.',
+              coreKnowledge: 'Phép cộng a + b = c (số hạng + số hạng = tổng). Tính chất giao hoán: a + b = b + a. Tính chất kết hợp: (a + b) + c = a + (b + c). Cộng với số 0: a + 0 = a. Phép trừ a - b = c (số bị trừ - số trừ = hiệu). Điều kiện để có phép trừ trong tập số tự nhiên là số bị trừ lớn hơn hoặc bằng số trừ (a ≥ b).',
+              pageReference: 'Trang 14-17 SGK Toán 6 Tập 1',
               allowedConcepts: ['Số hạng', 'Tổng', 'Số bị trừ', 'Số trừ', 'Hiệu', 'Giao hoán', 'Kết hợp'],
-              allowedFormulas: ['$a + b = b + a$', '$(a + b) + c = a + (b + c)$'],
-              allowedQuestionTypes: ['Tính nhanh nhóm số hạng', 'Tìm x']
+              allowedFormulas: ['$a + b = b + a$', '$(a + b) + c = a + (b + c)$']
             },
             {
               lessonNumber: 4,
               title: 'Bài 4: Phép nhân và phép chia số tự nhiên',
-              coreKnowledge: 'Tính chất giao hoán, kết hợp, phân phối của phép nhân; phép chia hết và chia có dư.',
-              allowedConcepts: ['Thừa số', 'Tích', 'Số bị chia', 'Số chia', 'Thương', 'Số dư (r < b)'],
-              allowedFormulas: ['$a \\cdot (b + c) = a \\cdot b + a \\cdot c$', '$a = b \\cdot q + r \\quad (0 \\le r < b)$'],
-              allowedQuestionTypes: ['Tính nhanh', 'Tìm số dư']
+              coreKnowledge: 'Phép nhân a . b = p (thừa số . thừa số = tích). Tính chất giao hoán: a . b = b . a. Tính chất kết hợp: (a . b) . c = a . (b . c). Nhân với 1: a . 1 = a. Tính chất phân phối của phép nhân đối với phép cộng: a . (b + c) = a . b + a . c. Phép chia hết a : b = q. Phép chia có dư a = b . q + r (0 < r < b). Số chia b luôn phải khác 0.',
+              pageReference: 'Trang 18-21 SGK Toán 6 Tập 1',
+              allowedConcepts: ['Thừa số', 'Tích', 'Số bị chia', 'Số chia', 'Thương', 'Số dư (0 < r < b)', 'Phân phối'],
+              allowedFormulas: ['$a \\cdot (b + c) = a \\cdot b + a \\cdot c$', '$a = b \\cdot q + r \\quad (0 \\le r < b)$']
             },
             {
               lessonNumber: 5,
               title: 'Bài 5: Lũy thừa với số mũ tự nhiên',
-              coreKnowledge: 'Khái niệm lũy thừa a^n, nhân và chia hai lũy thừa cùng cơ số, quy ước a^0 = 1.',
+              coreKnowledge: 'Lũy thừa bậc n của số tự nhiên a là tích của n thừa số bằng nhau, mỗi thừa số bằng a: a^n = a . a . ... . a (n thừa số a, n ∈ N*). a gọi là cơ số, n gọi là số mũ. Quy ước: a^1 = a; a^0 = 1 (với a ≠ 0). Nhân hai lũy thừa cùng cơ số: a^m . a^n = a^(m+n). Chia hai lũy thừa cùng cơ số: a^m : a^n = a^(m-n) (với a ≠ 0 và m ≥ n).',
+              pageReference: 'Trang 22-25 SGK Toán 6 Tập 1',
               allowedConcepts: ['Cơ số', 'Số mũ', 'Bình phương', 'Lập phương', 'Nhân cùng cơ số', 'Chia cùng cơ số'],
-              allowedFormulas: ['$a^m \\cdot a^n = a^{m+n}$', '$a^m : a^n = a^{m-n} \\quad (m \\ge n)$'],
-              allowedQuestionTypes: ['Tính lũy thừa', 'Tìm x có số mũ']
+              allowedFormulas: ['$a^m \\cdot a^n = a^{m+n}$', '$a^m : a^n = a^{m-n} \\quad (a \\neq 0, m \\ge n)$']
             }
           ],
           createdAt: new Date().toISOString(),
@@ -1354,6 +1355,122 @@ function saveStoredCurriculumScopes(scopes: any[]) {
   }
 }
 
+function getStoredApprovedQuestions(): any[] {
+  try {
+    ensureAuthDir();
+    if (!fs.existsSync(APPROVED_QUESTIONS_FILE)) {
+      // Seed initial high-quality approved sample questions
+      const initialApproved = [
+        {
+          id: 'appr_sample_math_01',
+          grade: 6,
+          subject: 'toan',
+          topic: 'Bài 1: Tập hợp. Phần tử của tập hợp',
+          content: 'Cho tập hợp $A = \\{2; 4; 6; 8\\}$. Khẳng định nào sau đây là **ĐÚNG** theo quy ước ký hiệu tập hợp?',
+          options: [
+            '$4 \\in A$',
+            '$5 \\in A$',
+            '$2 \\notin A$',
+            '$8 \\notin A$'
+          ],
+          correctIndex: 0,
+          correctAnswerText: '$4 \\in A$',
+          explanation: 'Tập hợp $A$ gồm các phần tử là 2, 4, 6, 8. Do số 4 có mặt trong tập hợp $A$, nên ta dùng ký hiệu thuộc: $4 \\in A$. Các phương án còn lại đều sai vì 5 không có trong A, còn 2 và 8 là phần tử của A.',
+          hint: 'Kiểm tra xem số 4 có nằm trong các phần tử được liệt kê của tập hợp A hay không.',
+          textbook: 'Kết nối tri thức với cuộc sống (Bộ GD&ĐT)',
+          edition: '2024-2025',
+          lessonNumber: 1,
+          lessonTitle: 'Bài 1: Tập hợp. Phần tử của tập hợp',
+          pageReference: 'Trang 6-9 SGK Toán 6 Tập 1',
+          sourceEvidence: 'Cách viết tập hợp bằng cách liệt kê các phần tử... Sử dụng các ký hiệu thuộc (∈) và không thuộc (∉).',
+          verificationStatus: 'passed_review',
+          verificationResult: {
+            passed: true,
+            codeValidationPassed: true,
+            codeValidationErrors: [],
+            inScope: true,
+            answerConsistent: true,
+            evidenceSufficient: true,
+            singleCorrectOption: true,
+            distractorsValid: true,
+            explanationValid: true,
+            gradeAppropriate: true,
+            issueType: null,
+            reviewNotes: 'Câu hỏi hoàn toàn nằm trong nội dung Bài 1, đáp án A chính xác tuyệt đối, lời giải rõ ràng.',
+            suggestedCorrection: null,
+            qualityScore: 100
+          },
+          reviewerStatus: 'approved',
+          reviewedAt: new Date().toISOString(),
+          reviewedBy: 'Giáo viên Chuyên môn',
+          createdAt: new Date().toISOString()
+        },
+        {
+          id: 'appr_sample_math_02',
+          grade: 6,
+          subject: 'toan',
+          topic: 'Bài 5: Lũy thừa với số mũ tự nhiên',
+          content: 'Kết quả của phép tính nhân hai lũy thừa cùng cơ số $3^2 \\cdot 3^4$ bằng bao nhiêu?',
+          options: [
+            '$3^6$',
+            '$3^8$',
+            '$9^6$',
+            '$9^8$'
+          ],
+          correctIndex: 0,
+          correctAnswerText: '$3^6$',
+          explanation: 'Theo quy tắc nhân hai lũy thừa cùng cơ số trong SGK Toán 6: $a^m \\cdot a^n = a^{m+n}$. Giữ nguyên cơ số 3 và cộng các số mũ: $3^2 \\cdot 3^4 = 3^{2+4} = 3^6$.',
+          hint: 'Áp dụng công thức: Khi nhân hai lũy thừa cùng cơ số, giữ nguyên cơ số và cộng các số mũ.',
+          textbook: 'Kết nối tri thức với cuộc sống (Bộ GD&ĐT)',
+          edition: '2024-2025',
+          lessonNumber: 5,
+          lessonTitle: 'Bài 5: Lũy thừa với số mũ tự nhiên',
+          pageReference: 'Trang 22-25 SGK Toán 6 Tập 1',
+          sourceEvidence: 'Nhân hai lũy thừa cùng cơ số: a^m . a^n = a^(m+n). Giữ nguyên cơ số và cộng các số mũ.',
+          verificationStatus: 'passed_review',
+          verificationResult: {
+            passed: true,
+            codeValidationPassed: true,
+            codeValidationErrors: [],
+            inScope: true,
+            answerConsistent: true,
+            evidenceSufficient: true,
+            singleCorrectOption: true,
+            distractorsValid: true,
+            explanationValid: true,
+            gradeAppropriate: true,
+            issueType: null,
+            reviewNotes: 'Câu hỏi chuẩn hóa theo đúng công thức SGK Bài 5, không gây nhầm lẫn.',
+            suggestedCorrection: null,
+            qualityScore: 100
+          },
+          reviewerStatus: 'approved',
+          reviewedAt: new Date().toISOString(),
+          reviewedBy: 'Tổ trưởng Bộ môn Toán',
+          createdAt: new Date().toISOString()
+        }
+      ];
+      fs.writeFileSync(APPROVED_QUESTIONS_FILE, JSON.stringify(initialApproved, null, 2), 'utf8');
+      return initialApproved;
+    }
+    const raw = fs.readFileSync(APPROVED_QUESTIONS_FILE, 'utf8');
+    const parsed = JSON.parse(raw);
+    return Array.isArray(parsed) ? parsed : [];
+  } catch (err) {
+    console.error('Failed to read approved questions file:', err);
+    return [];
+  }
+}
+
+function saveStoredApprovedQuestions(questions: any[]) {
+  try {
+    ensureAuthDir();
+    fs.writeFileSync(APPROVED_QUESTIONS_FILE, JSON.stringify(questions, null, 2), 'utf8');
+  } catch (err) {
+    console.error('Failed to write approved questions file:', err);
+  }
+}
+
 function getStoredQuestionReports(): any[] {
   try {
     ensureAuthDir();
@@ -1378,357 +1495,710 @@ function saveStoredQuestionReports(reports: any[]) {
   }
 }
 
-// GET /api/curriculum-scopes
-app.get('/api/curriculum-scopes', (req, res) => {
+/**
+ * LỚP 1: KIỂM TRA TÍNH HỢP LỆ BẰNG CODE (Code Validation)
+ */
+function performCodeValidation(q: any, lesson?: any): { valid: boolean; errors: string[] } {
+  const errors: string[] = [];
+
+  if (!q) {
+    errors.push('Dữ liệu câu hỏi không tồn tại.');
+    return { valid: false, errors };
+  }
+
+  // 1. Nội dung câu hỏi không để trống
+  const content = (q.content || q.question || '').trim();
+  if (content.length < 10) {
+    errors.push('Nội dung câu hỏi không được để trống hoặc quá ngắn (tối thiểu 10 ký tự).');
+  }
+
+  // 2. Đúng 4 phương án
+  if (!Array.isArray(q.options) || q.options.length !== 4) {
+    errors.push(`Câu hỏi phải có đúng 4 phương án lựa chọn (hiện có ${Array.isArray(q.options) ? q.options.length : 0}).`);
+  } else {
+    const trimmedOpts = q.options.map((o: any) => String(o || '').trim());
+    if (trimmedOpts.some((o: string) => o.length === 0)) {
+      errors.push('Phương án lựa chọn không được chứa nội dung để trống.');
+    }
+
+    // 3. Không có phương án trùng nhau
+    const lowerSet = new Set(trimmedOpts.map((o: string) => o.toLowerCase()));
+    if (lowerSet.size !== 4) {
+      errors.push('Các phương án lựa chọn không được trùng lặp nội dung với nhau.');
+    }
+  }
+
+  // 4. correctIndex nằm trong phạm vi hợp lệ [0, 3]
+  if (typeof q.correctIndex !== 'number' || !Number.isInteger(q.correctIndex) || q.correctIndex < 0 || q.correctIndex > 3) {
+    errors.push(`Chỉ số đáp án đúng (correctIndex) phải là số nguyên từ 0 đến 3 (hiện tại: ${q.correctIndex}).`);
+  }
+
+  // 5. Lời giải thích không được để trống
+  const explanation = (q.explanation || '').trim();
+  if (explanation.length < 10) {
+    errors.push('Lời giải thích không được để trống (tối thiểu 10 ký tự).');
+  }
+
+  // 6. Liên kết với bài học nguồn
+  if (lesson && lesson.lessonNumber !== undefined && q.lessonNumber !== undefined) {
+    if (Number(lesson.lessonNumber) !== Number(q.lessonNumber)) {
+      errors.push(`Câu hỏi bị lệch mã bài học nguồn (thuộc bài ${q.lessonNumber} nhưng đang thẩm định theo bài ${lesson.lessonNumber}).`);
+    }
+  }
+
+  return {
+    valid: errors.length === 0,
+    errors
+  };
+}
+
+/**
+ * LỚP 2: KIỂM TRA ĐỘC LẬP BẰNG LƯỢT GỌI GEMINI RIÊNG (Independent AI Verification Pass)
+ * Đóng vai trò Hội Đồng Thẩm Định Khảo Thí: tự giải câu hỏi, đối chiếu nguồn, phát hiện câu hỏi ngoài nguồn,
+ * đáp án sai, nhiều đáp án đúng, mâu thuẫn lời giải.
+ */
+async function runIndependentAiVerification(params: {
+  question: any;
+  lesson: any;
+  grade: number;
+  subject: string;
+  textbook: string;
+}): Promise<any> {
+  const { question, lesson, grade, subject, textbook } = params;
+
+  // Run code validation first
+  const codeValidation = performCodeValidation(question, lesson);
+
+  const ai = getGenAI();
+  if (!ai) {
+    return {
+      passed: false,
+      codeValidationPassed: codeValidation.valid,
+      codeValidationErrors: codeValidation.errors,
+      inScope: false,
+      answerConsistent: false,
+      evidenceSufficient: false,
+      singleCorrectOption: false,
+      distractorsValid: false,
+      explanationValid: false,
+      gradeAppropriate: true,
+      issueType: 'DATA_INVALID',
+      reviewNotes: 'Dịch vụ AI kiểm định độc lập chưa thể kích hoạt do thiếu GEMINI_API_KEY. Câu hỏi được giữ ở trạng thái chờ giáo viên rà soát thủ công.',
+      suggestedCorrection: null,
+      qualityScore: codeValidation.valid ? 50 : 25
+    };
+  }
+
+  const lessonTitle = lesson?.title || 'Bài học đã chọn';
+  const coreKnowledge = lesson?.coreKnowledge || 'Nội dung kiến thức bài học';
+  const pageRef = lesson?.pageReference || 'N/A';
+  const concepts = Array.isArray(lesson?.allowedConcepts) ? lesson.allowedConcepts.join(', ') : 'N/A';
+  const formulas = Array.isArray(lesson?.allowedFormulas) ? lesson.allowedFormulas.join(', ') : 'N/A';
+
+  const auditorPrompt = `Bạn là Chuyên gia Khảo thí và Thẩm định Sư phạm Độc lập (Independent Exam Quality Auditor).
+Nhiệm vụ của bạn là thẩm định ĐỘC LẬP câu hỏi trắc nghiệm dưới đây đối chiếu với DUY NHẤT nội dung kiến thức sách giáo khoa (SGK) được cung cấp.
+
+--- PHẠM VI NGUỒN SGK ĐƯỢC CUNG CẤP (NGUỒN CĂN CỨ DUY NHẤT) ---
+Bộ sách: ${textbook} • Môn: ${subject.toUpperCase()} • Lớp: ${grade}
+Bài học: ${lessonTitle}
+Số trang tham chiếu: ${pageRef}
+Nội dung kiến thức chính trích từ SGK:
+"""
+${coreKnowledge}
+"""
+Khái niệm / Định nghĩa trong bài: ${concepts}
+Công thức trong bài: ${formulas}
+
+--- CÂU HỎI TRẮC NGHIỆM CẦN THẨM ĐỊNH ---
+Nội dung câu hỏi: "${question.content || question.question}"
+Phương án A: "${question.options?.[0] || ''}"
+Phương án B: "${question.options?.[1] || ''}"
+Phương án C: "${question.options?.[2] || ''}"
+Phương án D: "${question.options?.[3] || ''}"
+Đáp án dự kiến: Lựa chọn thứ ${question.correctIndex} ("${question.options?.[question.correctIndex] || ''}")
+Lời giải thích: "${question.explanation || ''}"
+Bằng chứng trích dẫn từ nguồn: "${question.sourceEvidence || ''}"
+
+--- QUY TRÌNH THẨM ĐỊNH ĐỘC LẬP BẮT BUỘC ---
+1. TỰ GIẢI ĐỘC LẬP: Dựa DUY NHẤT vào phần "Nội dung kiến thức chính trích từ SGK" ở trên, bạn hãy tự giải câu hỏi để tìm đáp án chuẩn.
+2. ĐỐI CHIẾU ĐÁP ÁN: So sánh đáp án bạn tự giải với đáp án dự kiến (lựa chọn thứ ${question.correctIndex}).
+   - Nếu đáp án dự kiến sai so với nguồn: Đặt answerConsistent = false, issueType = "WRONG_ANSWER".
+3. KIỂM TRA PHẠM VI (inScope): Câu hỏi có sử dụng kiến thức bên ngoài nội dung bài học đã nhập không? Có vượt trình độ Lớp ${grade} không?
+   - Nếu câu hỏi hỏi về nội dung không được nhắc đến trong nguồn đã cấp: Đặt inScope = false, issueType = "OUT_OF_SCOPE".
+4. BẰNG CHỨNG NGUỒN (evidenceSufficient): Phần kiến thức nguồn đã cung cấp có đủ căn cứ để chứng minh đáp án không? Hay câu hỏi bị thiếu dữ kiện, mơ hồ?
+   - Nếu nguồn không đủ thông tin để trả lời câu hỏi: Đặt evidenceSufficient = false, issueType = "INSUFFICIENT_EVIDENCE".
+5. DUY NHẤT MỘT ĐÁP ÁN ĐÚNG:
+   - Có từ hai phương án trở lên cùng đúng không? Nếu có: singleCorrectOption = false, issueType = "MULTIPLE_CORRECT".
+   - Không có phương án nào đúng không? Nếu có: singleCorrectOption = false, issueType = "NO_CORRECT".
+6. LỜI GIẢI THÍCH: Lời giải có chứng minh rõ ràng và không mâu thuẫn với đáp án không?
+   - Nếu mâu thuẫn: explanationValid = false, issueType = "CONTRADICTORY_EXPLANATION".
+7. ĐỀ XUẤT SỬA (NẾU CÓ): Nếu phát hiện lỗi, hãy nêu rõ lỗi và đề xuất phương án sửa (nếu có căn cứ trong nguồn).
+
+YÊU CẦU ĐỊNH DẠNG TRẢ VỀ:
+Trả về DUY NHẤT một JSON hợp lệ (không kèm markdown ngoài JSON):
+{
+  "passed": true hoặc false (chỉ true khi và chỉ khi 100% các tiêu chí đều đạt: answerConsistent, inScope, evidenceSufficient, singleCorrectOption, distractorsValid, explanationValid),
+  "answerConsistent": true hoặc false,
+  "inScope": true hoặc false,
+  "evidenceSufficient": true hoặc false,
+  "singleCorrectOption": true hoặc false,
+  "distractorsValid": true hoặc false,
+  "explanationValid": true hoặc false,
+  "gradeAppropriate": true hoặc false,
+  "issueType": null hoặc một trong ["OUT_OF_SCOPE", "WRONG_ANSWER", "MULTIPLE_CORRECT", "NO_CORRECT", "CONTRADICTORY_EXPLANATION", "INSUFFICIENT_EVIDENCE", "AMBIGUOUS"],
+  "reviewNotes": "Nhận xét chi tiết, rõ ràng của thẩm định viên nêu căn cứ đối chiếu với SGK",
+  "suggestedCorrection": {
+    "correctedIndex": 0,
+    "explanation": "Đề xuất lời giải chính xác",
+    "notes": "Lý do đề xuất sửa"
+  } hoặc null,
+  "qualityScore": số nguyên từ 0 đến 100
+}`;
+
+  try {
+    const response = await ai.models.generateContent({
+      model: 'gemini-3.8-flash',
+      contents: [{ role: 'user', parts: [{ text: auditorPrompt }] }],
+      config: {
+        temperature: 0.1, // Low temperature for deterministic, strict auditing
+      }
+    });
+
+    const raw = response.text ? response.text.trim() : '';
+    let cleanJson = raw;
+    if (cleanJson.includes('```json')) {
+      cleanJson = cleanJson.split('```json')[1].split('```')[0].trim();
+    } else if (cleanJson.includes('```')) {
+      cleanJson = cleanJson.split('```')[1].split('```')[0].trim();
+    }
+    const firstBrace = cleanJson.indexOf('{');
+    const lastBrace = cleanJson.lastIndexOf('}');
+    if (firstBrace !== -1 && lastBrace !== -1) {
+      cleanJson = cleanJson.substring(firstBrace, lastBrace + 1);
+    }
+
+    const parsed = JSON.parse(cleanJson);
+
+    // Calculate quality score based on actual audit criteria
+    const criteria = [
+      codeValidation.valid,
+      Boolean(parsed.inScope),
+      Boolean(parsed.answerConsistent),
+      Boolean(parsed.evidenceSufficient),
+      Boolean(parsed.singleCorrectOption),
+      Boolean(parsed.distractorsValid),
+      Boolean(parsed.explanationValid),
+      Boolean(parsed.gradeAppropriate)
+    ];
+    const points = criteria.filter(Boolean).length;
+    const computedScore = Math.round((points / 8) * 100);
+
+    const overallPassed = codeValidation.valid && Boolean(parsed.passed) && Boolean(parsed.answerConsistent) && Boolean(parsed.inScope) && Boolean(parsed.evidenceSufficient);
+
+    return {
+      passed: overallPassed,
+      codeValidationPassed: codeValidation.valid,
+      codeValidationErrors: codeValidation.errors,
+      inScope: Boolean(parsed.inScope),
+      answerConsistent: Boolean(parsed.answerConsistent),
+      evidenceSufficient: Boolean(parsed.evidenceSufficient),
+      singleCorrectOption: Boolean(parsed.singleCorrectOption),
+      distractorsValid: Boolean(parsed.distractorsValid),
+      explanationValid: Boolean(parsed.explanationValid),
+      gradeAppropriate: Boolean(parsed.gradeAppropriate),
+      issueType: overallPassed ? null : (parsed.issueType || (codeValidation.valid ? 'UNVERIFIED' : 'DATA_INVALID')),
+      reviewNotes: parsed.reviewNotes || (overallPassed ? 'Đạt chuẩn kiểm định sư phạm: bám sát SGK, đáp án nhất quán.' : 'Có tiêu chí chưa đạt, cần rà soát lại.'),
+      suggestedCorrection: parsed.suggestedCorrection || null,
+      qualityScore: computedScore
+    };
+  } catch (err: any) {
+    console.warn('[AI Auditor] Verification error:', err?.message || err);
+    return {
+      passed: false,
+      codeValidationPassed: codeValidation.valid,
+      codeValidationErrors: codeValidation.errors,
+      inScope: true,
+      answerConsistent: codeValidation.valid,
+      evidenceSufficient: true,
+      singleCorrectOption: true,
+      distractorsValid: true,
+      explanationValid: true,
+      gradeAppropriate: true,
+      issueType: codeValidation.valid ? null : 'DATA_INVALID',
+      reviewNotes: `Lỗi kết nối bộ thẩm định AI: ${err?.message || 'Không thể phản hồi'}. Giáo viên vui lòng tự kiểm tra đối chiếu trực tiếp với SGK.`,
+      suggestedCorrection: null,
+      qualityScore: codeValidation.valid ? 75 : 40
+    };
+  }
+}
+
+// ==========================================
+// API ROUTES: BỘ KIẾN THỨC SGK (KNOWLEDGE SETS)
+// ==========================================
+
+// GET /api/textbook/knowledge-sets (and alias /api/curriculum-scopes)
+app.get(['/api/textbook/knowledge-sets', '/api/curriculum-scopes'], (req, res) => {
   const scopes = getStoredCurriculumScopes();
-  res.json({ scopes });
+  res.json({ success: true, scopes, knowledgeSets: scopes });
 });
 
-// POST /api/curriculum-scopes
-app.post('/api/curriculum-scopes', (req, res) => {
+// POST /api/textbook/knowledge-sets (and alias /api/curriculum-scopes)
+app.post(['/api/textbook/knowledge-sets', '/api/curriculum-scopes'], (req, res) => {
   try {
-    const { scope } = req.body;
-    if (!scope || !scope.id) {
-      return res.status(400).json({ error: 'Scope data is missing or invalid' });
+    const scopeData = req.body.knowledgeSet || req.body.scope || req.body;
+    if (!scopeData || !scopeData.subject || !scopeData.grade) {
+      return res.status(400).json({ error: 'Dữ liệu bộ kiến thức không hợp lệ. Cần có môn học và khối lớp.' });
     }
+
     const scopes = getStoredCurriculumScopes();
-    const idx = scopes.findIndex((s: any) => s.id === scope.id);
+    const id = scopeData.id || `scope_${scopeData.subject}_lop${scopeData.grade}_${Date.now()}`;
+    const cleanLessons = Array.isArray(scopeData.lessons)
+      ? scopeData.lessons.map((l: any, i: number) => ({
+          lessonNumber: typeof l.lessonNumber === 'number' ? l.lessonNumber : i + 1,
+          title: (l.title || `Bài ${i + 1}`).trim(),
+          coreKnowledge: (l.coreKnowledge || '').trim(),
+          pageReference: (l.pageReference || '').trim(),
+          allowedConcepts: Array.isArray(l.allowedConcepts) ? l.allowedConcepts : [],
+          allowedFormulas: Array.isArray(l.allowedFormulas) ? l.allowedFormulas : []
+        }))
+      : [];
+
+    const updated = {
+      id,
+      subject: scopeData.subject,
+      grade: Number(scopeData.grade),
+      textbook: (scopeData.textbook || 'Sách Giáo Khoa Chuẩn GDPT 2018').trim(),
+      edition: (scopeData.edition || '2024-2025').trim(),
+      description: (scopeData.description || `Bộ kiến thức SGK Lớp ${scopeData.grade} môn ${scopeData.subject}`).trim(),
+      lessons: cleanLessons,
+      disallowedTopics: Array.isArray(scopeData.disallowedTopics) ? scopeData.disallowedTopics : [],
+      updatedAt: new Date().toISOString(),
+      createdAt: scopeData.createdAt || new Date().toISOString()
+    };
+
+    const idx = scopes.findIndex((s: any) => s.id === id);
     if (idx >= 0) {
-      scopes[idx] = { ...scope, updatedAt: new Date().toISOString() };
+      scopes[idx] = updated;
     } else {
-      scopes.unshift({ ...scope, updatedAt: new Date().toISOString() });
+      scopes.unshift(updated);
     }
     saveStoredCurriculumScopes(scopes);
-    res.json({ success: true, scope });
+
+    console.log(`[Textbook] Saved knowledge set: ${id} with ${cleanLessons.length} lessons`);
+    return res.json({ success: true, knowledgeSet: updated, scope: updated });
   } catch (err: any) {
-    res.status(500).json({ error: err.message });
+    console.error('Error saving knowledge set:', err);
+    return res.status(500).json({ error: err.message });
   }
 });
 
-// DELETE /api/curriculum-scopes/:id
-app.delete('/api/curriculum-scopes/:id', (req, res) => {
+// DELETE /api/textbook/knowledge-sets/:id (and alias /api/curriculum-scopes/:id)
+app.delete(['/api/textbook/knowledge-sets/:id', '/api/curriculum-scopes/:id'], (req, res) => {
   try {
     const { id } = req.params;
     let scopes = getStoredCurriculumScopes();
     scopes = scopes.filter((s: any) => s.id !== id);
     saveStoredCurriculumScopes(scopes);
-    res.json({ success: true });
+    return res.json({ success: true, message: 'Đã xóa bộ kiến thức.' });
   } catch (err: any) {
-    res.status(500).json({ error: err.message });
+    return res.status(500).json({ error: err.message });
   }
 });
 
-// POST /api/generate-curriculum-questions
-// Strictly generates questions within the specified textbook scope and executes 8-point automated validation
-app.post('/api/generate-curriculum-questions', async (req, res) => {
+// ==========================================
+// API ROUTES: BƯỚC 2 & 3: TẠO VÀ KIỂM ĐỊNH CÂU HỎI
+// ==========================================
+
+// POST /api/textbook/generate (and alias /api/generate-curriculum-questions)
+app.post(['/api/textbook/generate', '/api/generate-curriculum-questions'], async (req, res) => {
   try {
     const {
       subject = 'toan',
       grade = 6,
       textbook = 'Kết nối tri thức với cuộc sống',
+      edition = '2024-2025',
       lesson,
       allLessons = [],
-      disallowedTopics = [],
-      count = 3,
+      count = 2,
       difficulty = 3
     } = req.body;
 
-    const lessonTitle = lesson?.title || 'Bài học trọng tâm';
-    const coreKnowledge = lesson?.coreKnowledge || 'Kiến thức bài học chuẩn SGK';
-    const allowedConcepts = Array.isArray(lesson?.allowedConcepts) ? lesson.allowedConcepts.join(', ') : 'Các khái niệm trong bài';
-    const allowedFormulas = Array.isArray(lesson?.allowedFormulas) ? lesson.allowedFormulas.join(', ') : 'Các công thức trong bài';
-    const disallowed = Array.isArray(disallowedTopics) && disallowedTopics.length > 0
-      ? disallowedTopics.join(', ')
-      : 'Kiến thức ngoài phạm vi SGK';
+    if (!lesson || !lesson.coreKnowledge || lesson.coreKnowledge.trim().length < 15) {
+      return res.status(400).json({
+        error: 'Nội dung kiến thức chính của bài học chưa đủ hoặc để trống (tối thiểu 15 ký tự). Vui lòng cung cấp nội dung kiến thức SGK trước khi tạo câu hỏi.'
+      });
+    }
 
-    const systemPrompt = `Bạn là Hội đồng Thẩm định và Khảo thí Giáo dục Quốc gia Việt Nam.
-Nhiệm vụ của bạn: Biên soạn ${count} câu hỏi trắc nghiệm TUÂN THỦ 100% PHẠM VI KIẾN THỨC SÁCH GIÁO KHOA ĐÃ ĐƯỢC CẤU HÌNH.
+    const lessonTitle = lesson.title || 'Bài học trọng tâm';
+    const coreKnowledge = lesson.coreKnowledge.trim();
+    const pageRef = lesson.pageReference || '';
+    const allowedConcepts = Array.isArray(lesson.allowedConcepts) && lesson.allowedConcepts.length > 0
+      ? lesson.allowedConcepts.join(', ')
+      : 'Các khái niệm trong bài';
+    const allowedFormulas = Array.isArray(lesson.allowedFormulas) && lesson.allowedFormulas.length > 0
+      ? lesson.allowedFormulas.join(', ')
+      : 'Các công thức trong bài';
 
---- PHẠM VI KIẾN THỨC BẮT BUỘC (KHÔNG ĐƯỢC VƯỢT QUÁ) ---
-- Bộ sách giáo khoa: ${textbook}
-- Môn học: ${subject.toUpperCase()} - Khối Lớp: ${grade}
+    const ai = getGenAI();
+    if (!ai) {
+      return res.status(503).json({
+        error: 'Chưa cấu hình GEMINI_API_KEY. Theo nguyên tắc chất lượng SGK, hệ thống không được tự ý dùng câu hỏi ngẫu nhiên chưa kiểm định để tạo câu hỏi cho chế độ SGK.'
+      });
+    }
+
+    const generatorPrompt = `Bạn là Chuyên gia Khảo thí và Thiết kế Câu hỏi Thi chuẩn Sách Giáo Khoa (SGK) Việt Nam.
+Nhiệm vụ TỐI THƯỢNG: Biên soạn ĐÚNG ${Math.min(Math.max(1, count), 4)} câu hỏi trắc nghiệm chất lượng cao bám sát DUY NHẤT phạm vi kiến thức SGK được giáo viên cung cấp dưới đây.
+
+--- PHẠM VI NGUỒN SGK ĐƯỢC CẤP (BẮT BUỘC TUÂN THỦ 100%) ---
+- Môn học: ${subject.toUpperCase()} • Khối lớp: Lớp ${grade}
+- Bộ sách giáo khoa: ${textbook} ${edition ? `(Phiên bản: ${edition})` : ''}
 - Tên bài học: ${lessonTitle}
-- Nội dung kiến thức cốt lõi: ${coreKnowledge}
-- Khái niệm / Định nghĩa ĐƯỢC PHÉP DÙNG: ${allowedConcepts}
-- Công thức / Biểu thức ĐƯỢC PHÉP DÙNG: ${allowedFormulas}
-- NỘI DUNG TUYỆT ĐỐI CẤM (VƯỢT TRÌNH ĐỘ): ${disallowed}
+- Số trang SGK tham chiếu: ${pageRef || 'Theo phân phối chương trình'}
+- NỘI DUNG KIẾN THỨC CHÍNH ĐƯỢC TRÍCH TỪ SGK:
+"""
+${coreKnowledge}
+"""
+- Khái niệm / Định nghĩa được phép dùng: ${allowedConcepts}
+- Công thức được phép dùng: ${allowedFormulas}
 
---- NGUYÊN TẮC BẢO ĐẢM CHẤT LƯỢNG (8 TIÊU CHÍ ZERO-DEFECT) ---
-1. Nằm trong phạm vi kiến thức đã nhập: Tuyệt đối không tự ý mở rộng hay đưa kiến thức ngoài SGK vào đề.
-2. Dữ kiện đầy đủ và nhất quán: Đề bài rõ ràng, không mâu thuẫn số liệu.
-3. Đáp án chính xác 100%: Bạn phải giải chi tiết và kiểm tra đáp án đúng.
-4. Lời giải chứng minh được đáp án: Giải thích tường tận từng bước dẫn tới kết quả.
-5. Duy nhất 1 đáp án phù hợp: Chỉ 1 phương án đúng trong 4 phương án A, B, C, D.
-6. Phương án nhiễu hợp lý, không gây nhập nhằng: Các phương án sai phải có tính sư phạm, tránh tranh cãi.
-7. Không trùng lặp: Đổi mới cách diễn đạt và tình huống.
-8. Phù hợp với lứa tuổi và trình độ học sinh Lớp ${grade}.
+--- NGUYÊN TẮC NGHIÊM NGẶT (KHÔNG ĐƯỢC VI PHẠM) ---
+1. CHỈ SỬ DỤNG KIẾN THỨC TRONG NỘI DUNG NGUỒN ĐƯỢC CUNG CẤP Ở TRÊN.
+2. TUYỆT ĐỐI KHÔNG tự mở rộng sang bài chưa nhập, lớp khác, kiến thức nâng cao ngoài SGK.
+3. TUYỆT ĐỐI KHÔNG sử dụng trí nhớ tổng quát để tự bổ sung dữ kiện khi nguồn không đủ căn cứ.
+4. TUYỆT ĐỐI KHÔNG tự suy đoán số liệu, định nghĩa, công thức hay quy tắc.
+5. Nếu không thể xây dựng câu hỏi có đáp án rõ ràng từ nguồn, phải bỏ qua câu đó.
+6. Mỗi câu hỏi trắc nghiệm BẮT BUỘC có đúng 4 phương án (A, B, C, D) và DUY NHẤT 1 ĐÁP ÁN ĐÚNG.
+7. Bắt buộc có phần trích dẫn nguyên văn bằng chứng từ nội dung nguồn (sourceEvidence) để chứng minh tính chuẩn xác.
+8. Toàn bộ công thức toán học phải viết dạng LaTeX KaTeX kẹp giữa dấu $ (ví dụ: $a^m \\cdot a^n = a^{m+n}$, $x \\in A$).
 
-Toàn bộ công thức toán học phải viết dạng LaTeX KaTeX kẹp giữa dấu $ (ví dụ: $x = 2$, $a^m \\cdot a^n = a^{m+n}$).
-
-YÊU CẦU ĐỊNH DẠNG: Trả về duy nhất một JSON array hợp lệ:
+YÊU CẦU ĐỊNH DẠNG:
+Trả về DUY NHẤT một JSON array hợp lệ (không kèm văn bản mở đầu hay kết thúc):
 [
   {
-    "id": "scope_gen_${Date.now()}_1",
-    "grade": ${Number(grade)},
-    "subject": "${subject}",
-    "topic": "${lessonTitle}",
-    "lessonName": "${lessonTitle}",
-    "textbook": "${textbook}",
-    "difficulty": ${Number(difficulty)},
-    "content": "Nội dung câu hỏi bám sát SGK...",
-    "options": ["Lựa chọn A", "Lựa chọn B", "Lựa chọn C", "Lựa chọn D"],
+    "content": "Nội dung câu hỏi trắc nghiệm rõ ràng, bám sát nguồn...",
+    "options": [
+      "Phương án A",
+      "Phương án B",
+      "Phương án C",
+      "Phương án D"
+    ],
     "correctIndex": 0,
-    "correctAnswerText": "Lựa chọn A",
-    "explanation": "Lời giải chi tiết và chứng minh chặt chẽ...",
-    "hint": "Gợi ý tư duy ngắn gọn...",
-    "proofSource": "${textbook} - ${lessonTitle}"
+    "correctAnswerText": "Phương án A",
+    "explanation": "Lời giải thích cặn kẽ từng bước, đối chiếu trực tiếp với nội dung SGK...",
+    "hint": "Gợi ý ngắn gọn giúp học sinh suy luận...",
+    "sourceEvidence": "Trích dẫn nguyên văn câu chữ/căn cứ từ phần kiến thức đã nhập ở trên..."
   }
 ]`;
 
-    const ai = getGenAI();
-    let questions: any[] = [];
-    let auditPassed = true;
-    let notes = 'Đã kiểm định tự động qua 8 tiêu chí chất lượng SGK.';
-
-    if (ai) {
-      try {
-        const response = await ai.models.generateContent({
-          model: 'gemini-3.8-flash',
-          contents: [
-            {
-              role: 'user',
-              parts: [{ text: `Hãy biên soạn đúng ${count} câu hỏi trắc nghiệm chất lượng cao từ phạm vi bài "${lessonTitle}" môn ${subject} Lớp ${grade} theo SGK ${textbook}.` }]
-            }
-          ],
-          config: {
-            systemInstruction: systemPrompt,
-            temperature: 0.4
-          }
-        });
-
-        const rawText = response.text ? response.text.trim() : '';
-        let cleanJson = rawText;
-        if (cleanJson.includes('```json')) {
-          cleanJson = cleanJson.split('```json')[1].split('```')[0].trim();
-        } else if (cleanJson.includes('```')) {
-          cleanJson = cleanJson.split('```')[1].split('```')[0].trim();
-        }
-        const first = cleanJson.indexOf('[');
-        const last = cleanJson.lastIndexOf(']');
-        if (first !== -1 && last !== -1) {
-          cleanJson = cleanJson.substring(first, last + 1);
-        }
-        questions = JSON.parse(cleanJson);
-      } catch (geminiErr: any) {
-        console.warn('Gemini scope generation warning:', geminiErr?.message);
+    const response = await ai.models.generateContent({
+      model: 'gemini-3.8-flash',
+      contents: [{ role: 'user', parts: [{ text: generatorPrompt }] }],
+      config: {
+        temperature: 0.2, // Low temperature for high fidelity to text
       }
+    });
+
+    const rawText = response.text ? response.text.trim() : '';
+    let cleanJson = rawText;
+    if (cleanJson.includes('```json')) {
+      cleanJson = cleanJson.split('```json')[1].split('```')[0].trim();
+    } else if (cleanJson.includes('```')) {
+      cleanJson = cleanJson.split('```')[1].split('```')[0].trim();
+    }
+    const firstBracket = cleanJson.indexOf('[');
+    const lastBracket = cleanJson.lastIndexOf(']');
+    if (firstBracket !== -1 && lastBracket !== -1) {
+      cleanJson = cleanJson.substring(firstBracket, lastBracket + 1);
     }
 
-    // Fallback if AI was unavailable
-    if (!Array.isArray(questions) || questions.length === 0) {
-      questions = [
-        {
-          id: `scope_gen_${Date.now()}_fb`,
-          grade: Number(grade),
-          subject,
-          topic: lessonTitle,
-          lessonName: lessonTitle,
-          textbook,
-          difficulty: Number(difficulty),
-          content: `Theo sách giáo khoa ${textbook}, trong bài "${lessonTitle}", phát biểu nào sau đây là ĐÚNG nhất về ${allowedConcepts.split(',')[0]}?`,
-          options: [
-            `Khẳng định chuẩn xác: ${coreKnowledge.split('.')[0] || 'Khái niệm được xác định rõ ràng'}.`,
-            `Nội dung này không áp dụng cho chương trình Lớp ${grade}.`,
-            `Đây là phép tính cho kết quả luôn là số âm.`,
-            `Không thể biểu diễn được dưới dạng công thức.`
-          ],
-          correctIndex: 0,
-          correctAnswerText: `Khẳng định chuẩn xác: ${coreKnowledge.split('.')[0] || 'Khái niệm được xác định rõ ràng'}.`,
-          explanation: `Căn cứ theo sách giáo khoa ${textbook}, bài "${lessonTitle}" nêu rõ: ${coreKnowledge}.`,
-          hint: `Hãy đọc kỹ định nghĩa trong SGK bài ${lessonTitle}.`,
-          proofSource: `${textbook} - ${lessonTitle}`
-        }
-      ];
+    let parsedQuestions: any[] = [];
+    try {
+      parsedQuestions = JSON.parse(cleanJson);
+    } catch (parseErr) {
+      console.error('Failed to parse generated questions JSON:', cleanJson);
+      return res.status(500).json({ error: 'AI trả về dữ liệu không đúng định dạng JSON. Vui lòng thử lại.' });
     }
 
-    // Run 8-point automated validation on each generated question
-    const sanitized = questions.map((q, idx) => {
-      const distinctOpts = new Set(q.options?.map((o: any) => String(o).trim().toLowerCase())).size === 4;
-      const validIdx = typeof q.correctIndex === 'number' && q.correctIndex >= 0 && q.correctIndex <= 3;
-      const hasContent = Boolean(q.content && q.content.trim().length >= 10);
-      const hasExplanation = Boolean(q.explanation && q.explanation.trim().length >= 10);
+    if (!Array.isArray(parsedQuestions) || parsedQuestions.length === 0) {
+      return res.status(400).json({
+        error: 'Không thể tạo câu hỏi từ nguồn đã cung cấp. Vui lòng bổ sung thêm kiến thức chi tiết cho bài học.'
+      });
+    }
 
-      const inScope = true;
-      const dataConsistent = hasContent;
-      const answerAccurate = validIdx && distinctOpts;
-      const explanationValid = hasExplanation;
-      const singleCorrectOption = distinctOpts;
-      const distractorsValid = distinctOpts;
-      const nonDuplicate = true;
-      const gradeAppropriate = true;
+    // Process each generated question and execute INDEPENDENT 2-STEP VERIFICATION
+    const processedQuestions: any[] = [];
 
-      const points = [
-        inScope,
-        dataConsistent,
-        answerAccurate,
-        explanationValid,
-        singleCorrectOption,
-        distractorsValid,
-        nonDuplicate,
-        gradeAppropriate
-      ].filter(Boolean).length;
+    for (let i = 0; i < parsedQuestions.length; i++) {
+      const qRaw = parsedQuestions[i];
+      const qId = `q_sgk_${Date.now()}_${i}_${Math.random().toString(36).substring(2, 6)}`;
 
-      const qualityScore = Math.round((points / 8) * 100);
-      const overallStatus = qualityScore >= 90 ? 'PASSED' : qualityScore >= 70 ? 'FLAGGED' : 'REJECTED';
+      const options = Array.isArray(qRaw.options) && qRaw.options.length === 4
+        ? qRaw.options.map(String)
+        : ['Phương án A', 'Phương án B', 'Phương án C', 'Phương án D'];
 
-      const correctText = q.correctAnswerText || (q.options && q.options[q.correctIndex]) || 'Đáp án đúng';
+      const validIdx = typeof qRaw.correctIndex === 'number' && qRaw.correctIndex >= 0 && qRaw.correctIndex <= 3
+        ? qRaw.correctIndex
+        : 0;
 
-      return {
-        id: q.id || `scope_gen_${Date.now()}_${idx}`,
+      const candidateQuestion = {
+        id: qId,
         grade: Number(grade),
         subject,
-        topic: q.topic || lessonTitle,
-        lessonName: q.lessonName || lessonTitle,
+        topic: lessonTitle,
+        content: String(qRaw.content || qRaw.question || '').trim(),
+        options,
+        correctIndex: validIdx,
+        correctAnswerText: qRaw.correctAnswerText || options[validIdx],
+        explanation: String(qRaw.explanation || '').trim(),
+        hint: String(qRaw.hint || 'Hãy đọc kỹ định nghĩa và tính chất trong bài.').trim(),
         textbook,
-        difficulty: typeof q.difficulty === 'number' ? q.difficulty : Number(difficulty),
-        content: q.content,
-        options: Array.isArray(q.options) && q.options.length === 4 ? q.options.map(String) : ['A', 'B', 'C', 'D'],
-        correctIndex: validIdx ? q.correctIndex : 0,
-        correctAnswerText: correctText,
-        explanation: q.explanation || `Căn cứ theo sách giáo khoa ${textbook}.`,
-        hint: q.hint || 'Hãy suy luận từ định nghĩa đã học.',
-        proofSource: q.proofSource || `${textbook} - ${lessonTitle}`,
-        qualityScore,
-        qualityCheck: {
-          inScope,
-          dataConsistent,
-          answerAccurate,
-          explanationValid,
-          singleCorrectOption,
-          distractorsValid,
-          nonDuplicate,
-          gradeAppropriate,
-          qualityScore,
-          overallStatus,
-          notes: qualityScore === 100 
-            ? 'Đạt chuẩn 8/8 tiêu chí kiểm định chất lượng GDPT.' 
-            : `Đạt ${points}/8 tiêu chí kiểm định.`
-        }
+        edition,
+        lessonNumber: typeof lesson.lessonNumber === 'number' ? lesson.lessonNumber : 1,
+        lessonTitle,
+        pageReference: pageRef,
+        sourceEvidence: String(qRaw.sourceEvidence || coreKnowledge.slice(0, 120)).trim(),
+        sourceKnowledgeSetId: req.body.scopeId || req.body.knowledgeSetId || '',
+        reviewerStatus: 'pending_review', // ALWAYS starts as pending_review, waiting for teacher approval
+        createdAt: new Date().toISOString()
       };
-    });
 
-    res.json({
-      questions: sanitized,
-      auditPassed: true,
-      notes
-    });
-  } catch (err: any) {
-    console.error('Error in /api/generate-curriculum-questions:', err);
-    res.status(500).json({ error: err.message });
-  }
-});
+      // STEP 3: INDEPENDENT VERIFICATION PASS
+      const verification = await runIndependentAiVerification({
+        question: candidateQuestion,
+        lesson,
+        grade: Number(grade),
+        subject,
+        textbook
+      });
 
-// POST /api/validate-question
-// Runs 8-point quality check on a question
-app.post('/api/validate-question', async (req, res) => {
-  try {
-    const { question, scope } = req.body;
-    if (!question) {
-      return res.status(400).json({ error: 'Missing question' });
+      const verificationStatus = verification.passed ? 'passed_review' : 'flagged';
+
+      processedQuestions.push({
+        ...candidateQuestion,
+        verificationStatus,
+        verificationResult: verification,
+        qualityScore: verification.qualityScore
+      });
     }
 
-    const ai = getGenAI();
-    if (ai) {
-      try {
-        const auditPrompt = `Bạn là Ban Kiểm Định Khảo Thí Quốc Gia. Hãy đánh giá câu hỏi sau theo 8 tiêu chí kiểm định chất lượng:
-Câu hỏi: "${question.content}"
-Lựa chọn: ${JSON.stringify(question.options)}
-Đáp án hệ thống: Lựa chọn thứ ${question.correctIndex} ("${question.options?.[question.correctIndex]}")
-Lời giải: "${question.explanation}"
-Khối lớp: ${question.grade}, Môn: ${question.subject}
-${scope ? `Phạm vi SGK: ${scope.textbook}, Bài: ${scope.lessons?.[0]?.title || ''}` : ''}
+    const allPassed = processedQuestions.every(q => q.verificationResult?.passed);
+    console.log(`[Textbook Generate] Created ${processedQuestions.length} questions. All passed auto-check: ${allPassed}`);
 
-Đánh giá đúng (true) hoặc sai (false) cho 8 tiêu chí sau:
-1. inScope: Nằm trong phạm vi kiến thức đã nhập?
-2. dataConsistent: Dữ kiện đầy đủ và nhất quán?
-3. answerAccurate: Đáp án chính xác 100%?
-4. explanationValid: Lời giải chứng minh được đáp án?
-5. singleCorrectOption: Đúng duy nhất 1 đáp án?
-6. distractorsValid: Phương án nhiễu hợp lý, không nhập nhằng?
-7. nonDuplicate: Không trùng lặp?
-8. gradeAppropriate: Phù hợp lứa tuổi Lớp ${question.grade}?
-
-Trả về duy nhất JSON:
-{
-  "inScope": true,
-  "dataConsistent": true,
-  "answerAccurate": true,
-  "explanationValid": true,
-  "singleCorrectOption": true,
-  "distractorsValid": true,
-  "nonDuplicate": true,
-  "gradeAppropriate": true,
-  "notes": "Nhận xét sư phạm ngắn gọn"
-}`;
-
-        const response = await ai.models.generateContent({
-          model: 'gemini-3.8-flash',
-          contents: [{ role: 'user', parts: [{ text: auditPrompt }] }],
-          config: { temperature: 0.2 }
-        });
-
-        const raw = response.text || '';
-        let clean = raw;
-        if (clean.includes('```json')) clean = clean.split('```json')[1].split('```')[0].trim();
-        else if (clean.includes('```')) clean = clean.split('```')[1].split('```')[0].trim();
-        const parsed = JSON.parse(clean);
-
-        const points = [
-          parsed.inScope,
-          parsed.dataConsistent,
-          parsed.answerAccurate,
-          parsed.explanationValid,
-          parsed.singleCorrectOption,
-          parsed.distractorsValid,
-          parsed.nonDuplicate,
-          parsed.gradeAppropriate
-        ].filter(Boolean).length;
-
-        const qualityScore = Math.round((points / 8) * 100);
-
-        return res.json({
-          qualityCheck: {
-            ...parsed,
-            qualityScore,
-            overallStatus: qualityScore >= 90 ? 'PASSED' : qualityScore >= 70 ? 'FLAGGED' : 'REJECTED'
-          }
-        });
-      } catch (aiErr) {
-        console.warn('AI validation fallback:', aiErr);
-      }
-    }
-
-    // Heuristic fallback
-    const distinctOpts = new Set(question.options?.map((o: any) => String(o).trim().toLowerCase())).size === 4;
     return res.json({
-      qualityCheck: {
-        inScope: true,
-        dataConsistent: Boolean(question.content?.length > 10),
-        answerAccurate: typeof question.correctIndex === 'number' && distinctOpts,
-        explanationValid: Boolean(question.explanation?.length > 10),
-        singleCorrectOption: distinctOpts,
-        distractorsValid: distinctOpts,
-        nonDuplicate: true,
-        gradeAppropriate: true,
-        qualityScore: distinctOpts ? 100 : 75,
-        overallStatus: distinctOpts ? 'PASSED' : 'FLAGGED',
-        notes: 'Đã hoàn tất kiểm tra quy chuẩn cơ bản.'
-      }
+      success: true,
+      questions: processedQuestions,
+      auditPassed: allPassed,
+      notes: allPassed
+        ? 'Tất cả câu hỏi đã vượt qua 2 lớp kiểm định tự động (Code Validation + AI Auditor). Sẵn sàng chờ giáo viên duyệt.'
+        : 'Có câu hỏi cần giáo viên xem lại hoặc chỉnh sửa trước khi duyệt.'
     });
   } catch (err: any) {
-    res.status(500).json({ error: err.message });
+    console.error('Error in /api/textbook/generate:', err);
+    return res.status(500).json({ error: err.message || 'Lỗi xử lý tạo câu hỏi SGK.' });
   }
 });
+
+// POST /api/textbook/verify-question (and alias /api/validate-question)
+// Re-verifies a single edited or existing question
+app.post(['/api/textbook/verify-question', '/api/validate-question'], async (req, res) => {
+  try {
+    const { question, lesson, scope, grade, subject, textbook } = req.body;
+    if (!question) {
+      return res.status(400).json({ error: 'Thiếu dữ liệu câu hỏi cần kiểm định.' });
+    }
+
+    const targetLesson = lesson || (scope && scope.lessons && scope.lessons[0]) || {
+      title: question.lessonTitle || question.topic || 'Bài học SGK',
+      coreKnowledge: question.sourceEvidence || 'Nội dung kiến thức nguồn',
+      pageReference: question.pageReference || ''
+    };
+
+    const targetGrade = grade || question.grade || 6;
+    const targetSubject = subject || question.subject || 'toan';
+    const targetTextbook = textbook || (scope && scope.textbook) || question.textbook || 'Sách giáo khoa';
+
+    const verificationResult = await runIndependentAiVerification({
+      question,
+      lesson: targetLesson,
+      grade: targetGrade,
+      subject: targetSubject,
+      textbook: targetTextbook
+    });
+
+    return res.json({
+      success: true,
+      verificationResult,
+      qualityCheck: verificationResult // for backwards compatibility
+    });
+  } catch (err: any) {
+    console.error('Error in /api/textbook/verify-question:', err);
+    return res.status(500).json({ error: err.message });
+  }
+});
+
+// ==========================================
+// API ROUTES: BƯỚC 4: KHO CÂU HỎI ĐÃ DUYỆT (APPROVED QUESTIONS)
+// ==========================================
+
+// GET /api/textbook/approved-questions
+app.get('/api/textbook/approved-questions', (req, res) => {
+  try {
+    const { subject, grade, lessonNumber, lessonTitle } = req.query;
+    let questions = getStoredApprovedQuestions();
+
+    // Only return approved questions
+    questions = questions.filter((q: any) => q.reviewerStatus === 'approved');
+
+    if (subject && typeof subject === 'string' && subject !== 'all') {
+      questions = questions.filter((q: any) => q.subject === subject);
+    }
+    if (grade && typeof grade === 'string' && grade !== 'all') {
+      questions = questions.filter((q: any) => String(q.grade) === String(grade));
+    }
+    if (lessonNumber && typeof lessonNumber === 'string') {
+      questions = questions.filter((q: any) => String(q.lessonNumber) === String(lessonNumber));
+    }
+    if (lessonTitle && typeof lessonTitle === 'string') {
+      questions = questions.filter((q: any) => (q.lessonTitle || q.topic || '').toLowerCase().includes(lessonTitle.toLowerCase()));
+    }
+
+    return res.json({
+      success: true,
+      total: questions.length,
+      questions
+    });
+  } catch (err: any) {
+    return res.status(500).json({ error: err.message });
+  }
+});
+
+// POST /api/textbook/approve-question
+// Teacher approves and commits question into official bank
+app.post('/api/textbook/approve-question', (req, res) => {
+  try {
+    const { question, reviewerName } = req.body;
+    if (!question || !question.id) {
+      return res.status(400).json({ error: 'Thiếu dữ liệu câu hỏi.' });
+    }
+
+    // Backend code validation check before approving
+    const codeVal = performCodeValidation(question);
+    if (!codeVal.valid) {
+      return res.status(400).json({
+        error: 'Câu hỏi không đạt quy chuẩn kỹ thuật.',
+        details: codeVal.errors
+      });
+    }
+
+    const approvedList = getStoredApprovedQuestions();
+    const approvedQuestion = {
+      ...question,
+      reviewerStatus: 'approved',
+      reviewedAt: new Date().toISOString(),
+      reviewedBy: reviewerName || 'Giáo viên Thẩm định',
+      updatedAt: new Date().toISOString()
+    };
+
+    const existingIdx = approvedList.findIndex((q: any) => q.id === question.id);
+    if (existingIdx >= 0) {
+      approvedList[existingIdx] = approvedQuestion;
+    } else {
+      approvedList.unshift(approvedQuestion);
+    }
+
+    saveStoredApprovedQuestions(approvedList);
+    console.log(`[Textbook] Approved question ${question.id} saved to official bank.`);
+
+    return res.json({
+      success: true,
+      message: 'Đã duyệt và lưu câu hỏi vào kho chính thức.',
+      question: approvedQuestion
+    });
+  } catch (err: any) {
+    console.error('Error in approve-question:', err);
+    return res.status(500).json({ error: err.message });
+  }
+});
+
+// POST /api/textbook/batch-approve
+app.post('/api/textbook/batch-approve', (req, res) => {
+  try {
+    const { questions, reviewerName } = req.body;
+    if (!Array.isArray(questions) || questions.length === 0) {
+      return res.status(400).json({ error: 'Danh sách câu hỏi trống.' });
+    }
+
+    const approvedList = getStoredApprovedQuestions();
+    let approvedCount = 0;
+
+    for (const q of questions) {
+      const codeVal = performCodeValidation(q);
+      if (codeVal.valid) {
+        const approvedItem = {
+          ...q,
+          reviewerStatus: 'approved',
+          reviewedAt: new Date().toISOString(),
+          reviewedBy: reviewerName || 'Giáo viên Thẩm định',
+          updatedAt: new Date().toISOString()
+        };
+        const idx = approvedList.findIndex((item: any) => item.id === q.id);
+        if (idx >= 0) {
+          approvedList[idx] = approvedItem;
+        } else {
+          approvedList.unshift(approvedItem);
+        }
+        approvedCount++;
+      }
+    }
+
+    saveStoredApprovedQuestions(approvedList);
+    return res.json({
+      success: true,
+      message: `Đã duyệt thành công ${approvedCount} câu hỏi vào kho chính thức.`,
+      approvedCount
+    });
+  } catch (err: any) {
+    return res.status(500).json({ error: err.message });
+  }
+});
+
+// POST /api/textbook/reject-question
+app.post('/api/textbook/reject-question', (req, res) => {
+  try {
+    const { questionId, rejectionReason } = req.body;
+    if (!questionId) {
+      return res.status(400).json({ error: 'Thiếu mã câu hỏi.' });
+    }
+
+    // If it was in approved list, remove or mark rejected
+    let approvedList = getStoredApprovedQuestions();
+    approvedList = approvedList.filter((q: any) => q.id !== questionId);
+    saveStoredApprovedQuestions(approvedList);
+
+    return res.json({
+      success: true,
+      message: 'Đã từ chối câu hỏi.',
+      questionId,
+      rejectionReason
+    });
+  } catch (err: any) {
+    return res.status(500).json({ error: err.message });
+  }
+});
+
+// DELETE /api/textbook/approved-questions/:id
+app.delete('/api/textbook/approved-questions/:id', (req, res) => {
+  try {
+    const { id } = req.params;
+    let approvedList = getStoredApprovedQuestions();
+    approvedList = approvedList.filter((q: any) => q.id !== id);
+    saveStoredApprovedQuestions(approvedList);
+    return res.json({ success: true, message: 'Đã xóa câu hỏi khỏi kho chính thức.' });
+  } catch (err: any) {
+    return res.status(500).json({ error: err.message });
+  }
+});
+
 
 // POST /api/dispute-question
 // AI Pedagogical Referee: resolves student appeal in real time

@@ -136,6 +136,10 @@ export const ProfileView: React.FC<ProfileViewProps> = ({
               <span className="px-2.5 py-0.5 rounded-full bg-amber-100 text-amber-900 text-xs font-black">
                 Cấp độ {user.level}
               </span>
+              <span className="px-2.5 py-0.5 rounded-full bg-orange-100 text-orange-900 text-xs font-black flex items-center gap-1 border border-orange-200 shadow-xs">
+                <Flame className="w-3.5 h-3.5 text-orange-500 fill-orange-500" />
+                Chuỗi {user.dailyStreak || 1} ngày
+              </span>
             </div>
 
             <p className="text-xs text-slate-500 font-medium">
@@ -193,6 +197,55 @@ export const ProfileView: React.FC<ProfileViewProps> = ({
           <span>{syncStatus}</span>
         </div>
       )}
+
+      {/* Key Metrics Overview Cards */}
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+        <div className="bg-gradient-to-br from-orange-50 to-amber-50 rounded-2xl p-4 border border-orange-200/80 shadow-xs flex items-center gap-3">
+          <div className="w-11 h-11 rounded-xl bg-gradient-to-tr from-orange-500 to-amber-500 text-white flex items-center justify-center text-xl shadow-xs shrink-0">
+            <Flame className="w-6 h-6 text-white fill-white animate-pulse" />
+          </div>
+          <div>
+            <div className="text-[11px] font-bold text-orange-700 uppercase tracking-wider">Daily Streak</div>
+            <div className="text-lg font-black text-orange-950">
+              {user.dailyStreak || 1} <span className="text-xs font-semibold text-orange-700">ngày</span>
+            </div>
+            <div className="text-[10px] text-orange-600 font-medium">Kỷ lục: {Math.max(user.highestStreak || 0, user.dailyStreak || 1)} ngày</div>
+          </div>
+        </div>
+
+        <div className="bg-gradient-to-br from-amber-50 to-yellow-50 rounded-2xl p-4 border border-amber-200/80 shadow-xs flex items-center gap-3">
+          <div className="w-11 h-11 rounded-xl bg-gradient-to-tr from-amber-500 to-yellow-500 text-white flex items-center justify-center text-xl shadow-xs shrink-0">
+            <Coins className="w-6 h-6 text-white" />
+          </div>
+          <div>
+            <div className="text-[11px] font-bold text-amber-700 uppercase tracking-wider">Kho báu Xu</div>
+            <div className="text-lg font-black text-amber-950">{user.coins.toLocaleString()}</div>
+            <div className="text-[10px] text-amber-600 font-medium">Đổi quà cửa hàng</div>
+          </div>
+        </div>
+
+        <div className="bg-gradient-to-br from-rose-50 to-pink-50 rounded-2xl p-4 border border-rose-200/80 shadow-xs flex items-center gap-3">
+          <div className="w-11 h-11 rounded-xl bg-gradient-to-tr from-rose-500 to-pink-500 text-white flex items-center justify-center text-xl shadow-xs shrink-0">
+            <Heart className="w-6 h-6 text-white fill-white" />
+          </div>
+          <div>
+            <div className="text-[11px] font-bold text-rose-700 uppercase tracking-wider">Năng lượng</div>
+            <div className="text-lg font-black text-rose-950">{user.hearts}/{user.maxHearts} Tim</div>
+            <div className="text-[10px] text-rose-600 font-medium">Hồi 1 tim/3 phút</div>
+          </div>
+        </div>
+
+        <div className="bg-gradient-to-br from-indigo-50 to-blue-50 rounded-2xl p-4 border border-indigo-200/80 shadow-xs flex items-center gap-3">
+          <div className="w-11 h-11 rounded-xl bg-gradient-to-tr from-indigo-500 to-blue-500 text-white flex items-center justify-center text-xl shadow-xs shrink-0">
+            <Target className="w-6 h-6 text-white" />
+          </div>
+          <div>
+            <div className="text-[11px] font-bold text-indigo-700 uppercase tracking-wider">Trận Đã Chơi</div>
+            <div className="text-lg font-black text-indigo-950">{user.totalGamesPlayed || 0}</div>
+            <div className="text-[10px] text-indigo-600 font-medium">Học sinh tích cực</div>
+          </div>
+        </div>
+      </div>
 
       {/* Quick Avatar & Frame Customizer */}
       <div className="bg-white rounded-3xl p-6 border border-slate-200/80 shadow-xs space-y-4">

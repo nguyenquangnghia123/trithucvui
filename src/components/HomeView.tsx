@@ -97,8 +97,12 @@ export const HomeView: React.FC<HomeViewProps> = ({
               </p>
               <div className="flex items-center gap-3 pt-1 text-xs text-white/90">
                 <span className="flex items-center gap-1 font-bold">
-                  <Flame className="w-4 h-4 text-amber-300 fill-amber-300" />
-                  Chuỗi thắng: {user.highestStreak} câu
+                  <Flame className="w-4 h-4 text-amber-300 fill-amber-300 animate-pulse" />
+                  Daily Streak: {user.dailyStreak || 1} ngày
+                </span>
+                <span className="text-white/40">•</span>
+                <span className="flex items-center gap-1 font-medium text-white/90">
+                  Chuỗi thắng: {user.highestStreak || 0} câu
                 </span>
                 <span className="text-white/40">•</span>
                 <span className="flex items-center gap-1 font-bold">

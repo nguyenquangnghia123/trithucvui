@@ -155,7 +155,8 @@ export class StorageService {
     const accounts = this.getAllAccounts();
     const account = accounts[session.userId];
     if (account && account.profile && account.profile.id !== 'user_default') {
-      return this.processHeartRegen(account.profile);
+      const withHearts = this.processHeartRegen(account.profile);
+      return this.processDailyStreak(withHearts);
     }
 
     // Fallback: check cached active profile
@@ -164,7 +165,8 @@ export class StorageService {
       try {
         const user: UserProfile = JSON.parse(raw);
         if (user && user.id === session.userId && user.id !== 'user_default') {
-          return this.processHeartRegen(user);
+          const withHearts = this.processHeartRegen(user);
+          return this.processDailyStreak(withHearts);
         }
       } catch {
         // ignore
@@ -228,6 +230,79 @@ export class StorageService {
       this.saveUserProfile(user);
     }
     return user;
+  }
+
+  // Helper to format date as YYYY-MM-DD in local time
+  public static getTodayDateString(date: Date = new Date()): string {
+    const y = date.getFullYear();
+    const m = String(date.getMonth() + 1).padStart(2, '0');
+    const d = String(date.getDate()).padStart(2, '0');
+    return `${y}-${m}-${d}`;
+  }
+
+  public static getYesterdayDateString(): string {
+    const d = new Date();
+    d.setDate(d.getDate() - 1);
+    return this.getTodayDateString(d);
+  }
+
+  // Process and update daily learning streak
+  public static processDailyStreak(user: UserProfile): UserProfile {
+    if (!user || !user.id || user.id === 'user_default') return user;
+
+    const today = this.getTodayDateString();
+    const yesterday = this.getYesterdayDateString();
+    let changed = false;
+
+    if (!user.lastActiveDate) {
+      user.lastActiveDate = today;
+      user.dailyStreak = Math.max(1, user.dailyStreak || 1);
+      changed = true;
+    } else if (user.lastActiveDate === today) {
+      if (!user.dailyStreak || user.dailyStreak < 1) {
+        user.dailyStreak = 1;
+        changed = true;
+      }
+    } else if (user.lastActiveDate === yesterday) {
+      // User was active yesterday and is continuing streak today!
+      user.dailyStreak = (user.dailyStreak || 0) + 1;
+      user.lastActiveDate = today;
+      changed = true;
+    } else {
+      // User missed one or more days -> streak resets to 1 today
+      user.dailyStreak = 1;
+      user.lastActiveDate = today;
+      changed = true;
+    }
+
+    if ((user.dailyStreak || 1) > (user.highestStreak || 0)) {
+      user.highestStreak = user.dailyStreak;
+      changed = true;
+    }
+
+    // Check streak achievements
+    if (!user.unlockedAchievements) user.unlockedAchievements = [];
+    if (user.dailyStreak >= 3 && !user.unlockedAchievements.includes('streak_3')) {
+      user.unlockedAchievements.push('streak_3');
+      changed = true;
+    }
+    if (user.dailyStreak >= 7 && !user.unlockedAchievements.includes('streak_7')) {
+      user.unlockedAchievements.push('streak_7');
+      changed = true;
+    }
+
+    if (changed) {
+      this.saveUserProfile(user);
+    }
+
+    return user;
+  }
+
+  // Update daily streak explicitly
+  public static updateDailyStreak(user?: UserProfile | null): UserProfile | null {
+    const targetUser = user || this.getUserProfile();
+    if (!targetUser) return null;
+    return this.processDailyStreak(targetUser);
   }
 
   // Instantly heal hearts with gentle mindful breath break
@@ -384,6 +459,7 @@ export class StorageService {
       user.recommendedFocus.shouldPractice = weakTopics;
     }
 
+    this.processDailyStreak(user);
     this.saveUserProfile(user);
     return user;
   }
