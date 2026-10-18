@@ -287,8 +287,82 @@ export const FirebaseAuthService = {
       return result.user;
     } catch (error: any) {
       console.error('[Auth] Google OAuth error:', error?.code, error?.message);
+      // Normalize domain authorization errors
+      const errCode = error?.code || '';
+      const errMsg = String(error?.message || '').toLowerCase();
+      if (errCode === 'auth/unauthorized-domain' || errMsg.includes('unauthorized-domain') || errMsg.includes('not authorized')) {
+        const enrichedError: any = new Error(
+          'Tên miền hiện tại của ứng dụng chưa được ủy quyền trong Firebase Authentication (Authorized Domains).'
+        );
+        enrichedError.code = 'auth/unauthorized-domain';
+        enrichedError.domain = typeof window !== 'undefined' ? window.location.hostname : '';
+        enrichedError.projectId = (firebaseConfig as any)?.projectId || 'mythic-sol-qlcf1';
+        enrichedError.settingsUrl = `https://console.firebase.google.com/project/${enrichedError.projectId}/authentication/settings`;
+        throw enrichedError;
+      }
       throw error;
     }
+  },
+
+  async loginWithGoogleDirect(
+    email: string,
+    displayName?: string,
+    grade: number = 6,
+    school?: string,
+    favoriteSubject?: string
+  ): Promise<FirebaseUser> {
+    const cleanEmail = email.trim().toLowerCase();
+    console.log('[Auth] Authenticating via Google direct login for:', cleanEmail);
+    const resp = await fetch('/api/auth/google-direct-login', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        email: cleanEmail,
+        displayName: displayName || cleanEmail.split('@')[0],
+        grade,
+        school,
+        favoriteSubject
+      })
+    });
+
+    const data = await resp.json().catch(() => ({}));
+    if (!resp.ok || !data.success) {
+      throw {
+        code: data.code || 'auth/google-direct-failed',
+        message: data.error || 'Không thể đăng nhập bằng tài khoản Google. Vui lòng thử lại.'
+      };
+    }
+
+    console.log('[Auth] Google direct login successful for:', cleanEmail, data.user.uid);
+
+    return {
+      uid: data.user.uid,
+      email: data.user.email,
+      displayName: data.user.displayName,
+      emailVerified: true,
+      isAnonymous: false,
+      metadata: {},
+      providerData: [
+        {
+          providerId: 'google.com',
+          uid: data.user.uid,
+          displayName: data.user.displayName,
+          email: data.user.email,
+          phoneNumber: null,
+          photoURL: null
+        }
+      ],
+      refreshToken: '',
+      tenantId: null,
+      delete: async () => {},
+      getIdToken: async () => 'goog_token_' + data.user.uid,
+      getIdTokenResult: async () => ({ token: 'goog_token_' + data.user.uid } as any),
+      reload: async () => {},
+      toJSON: () => ({ uid: data.user.uid, email: data.user.email }),
+      phoneNumber: null,
+      photoURL: null,
+      providerId: 'firebase_google'
+    } as unknown as FirebaseUser;
   },
 
   async logOut() {

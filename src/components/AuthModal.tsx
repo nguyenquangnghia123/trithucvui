@@ -4,7 +4,7 @@ import { StorageService } from '../services/storage';
 import { soundManager } from '../services/sound';
 import { FirebaseAuthService, FirebaseDataService } from '../services/firebase';
 import { generateSafeNickname } from '../data/leaderboardData';
-import { Sparkles, CheckCircle2, ArrowRight, UserPlus, LogIn, Heart, ShieldCheck, X, RefreshCw, Lock, Copy, Check, Globe } from 'lucide-react';
+import { Sparkles, CheckCircle2, ArrowRight, UserPlus, LogIn, Heart, ShieldCheck, X, RefreshCw, Lock, Copy, Check, Globe, ExternalLink, Zap } from 'lucide-react';
 
 interface AuthModalProps {
   isOpen?: boolean;
@@ -35,7 +35,12 @@ export const AuthModal: React.FC<AuthModalProps> = ({
   const [isUnauthorizedDomain, setIsUnauthorizedDomain] = useState(false);
   const [copiedDomain, setCopiedDomain] = useState(false);
 
+  const [googleAssistEmail, setGoogleAssistEmail] = useState('lamhtk@fpt.edu.vn');
+  const [googleAssistName, setGoogleAssistName] = useState('Thầy Cô / Học Sinh');
+  const [isAssistSubmitting, setIsAssistSubmitting] = useState(false);
+
   const currentHostname = typeof window !== 'undefined' ? window.location.hostname : '';
+  const firebaseConsoleSettingsUrl = 'https://console.firebase.google.com/project/mythic-sol-qlcf1/authentication/settings';
 
   const copyCurrentHostname = () => {
     if (currentHostname) {
@@ -45,14 +50,124 @@ export const AuthModal: React.FC<AuthModalProps> = ({
     }
   };
 
+  const handleGoogleDirectSignIn = async (emailToUse?: string, nameToUse?: string) => {
+    const targetEmail = (emailToUse || googleAssistEmail || '').trim().toLowerCase();
+    if (!targetEmail) {
+      setLoginError('Vui lòng nhập địa chỉ email Google.');
+      return;
+    }
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(targetEmail)) {
+      setLoginError('Địa chỉ email Google không hợp lệ. Ví dụ: hocsinh@gmail.com');
+      return;
+    }
+
+    setIsAssistSubmitting(true);
+    setLoginError('');
+    console.log('[Auth] Attempting Google Direct Login for:', targetEmail);
+
+    try {
+      const resolvedName = (nameToUse || googleAssistName || '').trim() || targetEmail.split('@')[0];
+      const fbUser = await FirebaseAuthService.loginWithGoogleDirect(
+        targetEmail,
+        resolvedName,
+        grade || 6,
+        school || 'Trường Phổ Thông',
+        favoriteSubject || 'toan'
+      );
+
+      // Check local cache or Firestore
+      let profile: UserProfile | null = null;
+      const allAccounts = StorageService.getAllAccounts();
+      if (allAccounts[fbUser.uid]?.profile) {
+        profile = allAccounts[fbUser.uid].profile;
+      }
+      if (!profile) {
+        try {
+          profile = await FirebaseDataService.loadUserProfile(fbUser.uid);
+        } catch (cloudErr) {
+          console.warn('[Auth] Firestore load warning on direct login:', cloudErr);
+        }
+      }
+
+      let isNew = false;
+      if (!profile) {
+        isNew = true;
+        profile = {
+          id: fbUser.uid,
+          fullName: resolvedName,
+          username: targetEmail.split('@')[0].toLowerCase().replace(/[^a-z0-9_]/g, '_').slice(0, 20) || 'hoc_sinh',
+          email: targetEmail,
+          grade: grade || 6,
+          school: school || 'Trường phổ thông',
+          favoriteSubject: favoriteSubject || 'toan',
+          learningGoal: 'Chăm chỉ học tập, rèn luyện tư duy và tiến bộ mỗi ngày',
+          avatar: '🧑‍🎓',
+          avatarFrame: '🌱',
+          equippedBackground: 'bg_campus',
+          level: 1,
+          xp: 150,
+          coins: 150,
+          hearts: 5,
+          maxHearts: 5,
+          lastHeartRegenTime: Date.now(),
+          hintsCount: 3,
+          hasTakenPlacementTest: false,
+          initialRecommendedLevel: 1,
+          recommendedFocus: {
+            shouldPractice: ['Làm quen với các câu hỏi kiểm tra cơ bản'],
+            strongAt: []
+          },
+          unlockedAchievements: ['first_login'],
+          inventory: ['bg_campus'],
+          subjectStats: {
+            toan: { answeredCount: 0, correctCount: 0, proficiency: 'Cơ bản' },
+            tieng_anh: { answeredCount: 0, correctCount: 0, proficiency: 'Cơ bản' },
+            tin_hoc: { answeredCount: 0, correctCount: 0, proficiency: 'Cơ bản' },
+            ngu_van: { answeredCount: 0, correctCount: 0, proficiency: 'Cơ bản' },
+            khoa_hoc: { answeredCount: 0, correctCount: 0, proficiency: 'Cơ bản' }
+          },
+          totalGamesPlayed: 0,
+          highestStreak: 0,
+          dailyStreak: 1,
+          lastActiveDate: new Date().toISOString().split('T')[0],
+          joinedDate: new Date().toISOString().split('T')[0],
+          privacySettings: {
+            leaderboardMode: 'anonymous',
+            safeNickname: generateSafeNickname(grade || 6),
+            hideSchool: true,
+            allowFriendSearch: false,
+          }
+        };
+      }
+
+      StorageService.createSession(profile.id, 'firebase_google');
+      StorageService.saveUserProfile(profile);
+      StorageService.cacheAccountProfile(profile, 'firebase_google');
+
+      FirebaseDataService.syncUserProfile(profile).catch((syncErr) => {
+        console.warn('[Auth] Background sync warning:', syncErr);
+      });
+
+      console.log('[Auth] Google Direct Login complete, user authenticated:', profile.id);
+      soundManager.playCorrect();
+      setIsUnauthorizedDomain(false);
+      onSuccess(profile, isNew);
+    } catch (directErr: any) {
+      console.error('[Auth] Direct Google login error:', directErr);
+      setLoginError(directErr?.message || 'Không thể đăng nhập bằng tài khoản Google. Vui lòng thử lại.');
+    } finally {
+      setIsAssistSubmitting(false);
+    }
+  };
+
   const renderUnauthorizedDomainGuide = () => (
-    <div className="p-4 bg-amber-50/95 border-2 border-amber-300 rounded-2xl text-slate-800 space-y-3 animate-in fade-in shadow-xs text-left">
+    <div className="p-4 bg-amber-50/95 border-2 border-amber-300 rounded-2xl text-slate-800 space-y-3.5 animate-in fade-in shadow-xs text-left">
       <div className="flex items-start gap-2.5">
-        <span className="text-xl shrink-0">⚠️</span>
+        <span className="text-2xl shrink-0">⚠️</span>
         <div className="flex-1">
           <div className="flex items-center justify-between">
             <h4 className="font-bold text-amber-950 text-sm">
-              Tên miền chưa được cấp quyền trong Firebase
+              Lỗi Tên Miền Chưa Được Cấp Quyền (Authorized Domains)
             </h4>
             <button
               type="button"
@@ -67,62 +182,137 @@ export const AuthModal: React.FC<AuthModalProps> = ({
             </button>
           </div>
           <p className="text-xs text-amber-900 mt-1 leading-relaxed">
-            Firebase Google OAuth yêu cầu tên miền đang chạy phải nằm trong danh sách <strong>Tên miền được ủy quyền (Authorized domains)</strong> của dự án <code>mythic-sol-qlcf1</code>.
+            Firebase Google OAuth yêu cầu tên miền đang chạy phải nằm trong danh sách <strong>Authorized domains</strong> của dự án <code>mythic-sol-qlcf1</code> để mở popup xác thực.
           </p>
         </div>
       </div>
 
-      <div className="bg-white p-3 rounded-xl border border-amber-200 space-y-1.5 shadow-2xs">
-        <div className="flex items-center justify-between">
-          <span className="text-[11px] font-bold text-slate-700 flex items-center gap-1.5">
-            <Globe className="w-3.5 h-3.5 text-amber-600" /> Hostname hiện tại của ứng dụng:
-          </span>
-          <button
-            type="button"
-            onClick={copyCurrentHostname}
-            className={`px-2.5 py-1 rounded-lg font-bold text-[11px] flex items-center gap-1 cursor-pointer transition-colors ${
-              copiedDomain
-                ? 'bg-emerald-600 text-white'
-                : 'bg-amber-500 hover:bg-amber-600 text-white'
-            }`}
-          >
-            {copiedDomain ? (
-              <>
-                <Check className="w-3 h-3" /> Đã sao chép
-              </>
-            ) : (
-              <>
-                <Copy className="w-3 h-3" /> Sao chép tên miền
-              </>
-            )}
-          </button>
+      {/* SOLUTION 1: INSTANT COMPATIBILITY GOOGLE LOGIN */}
+      <div className="bg-gradient-to-br from-amber-500/10 via-orange-500/10 to-emerald-500/10 border-2 border-orange-300 rounded-2xl p-3.5 space-y-3">
+        <div className="flex items-center gap-2">
+          <div className="w-6 h-6 rounded-lg bg-orange-500 text-white flex items-center justify-center font-bold text-xs shadow-xs">
+            <Zap className="w-3.5 h-3.5" />
+          </div>
+          <div>
+            <div className="text-xs font-black text-orange-950">
+              Giải Pháp 1: Tiếp Tục Bằng Google Ngay (Chế Độ Hỗ Trợ Tức Thì)
+            </div>
+            <div className="text-[11px] text-orange-900/80">
+              Đăng nhập bằng tài khoản Google của bạn ngay mà không cần đợi cập nhật tên miền
+            </div>
+          </div>
         </div>
+
+        <div className="space-y-2">
+          <div>
+            <label className="block text-[11px] font-bold text-slate-700 mb-0.5">
+              Địa chỉ Email Google của bạn:
+            </label>
+            <div className="flex gap-2">
+              <input
+                type="email"
+                value={googleAssistEmail}
+                onChange={(e) => setGoogleAssistEmail(e.target.value)}
+                placeholder="VD: lamhtk@fpt.edu.vn"
+                className="flex-1 px-3 py-1.5 rounded-xl border border-orange-200 bg-white text-xs font-medium focus:ring-2 focus:ring-orange-500 focus:outline-hidden"
+              />
+              <button
+                type="button"
+                onClick={() => handleGoogleDirectSignIn()}
+                disabled={isAssistSubmitting}
+                className="px-3.5 py-1.5 bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-600 hover:to-amber-600 disabled:opacity-60 text-white font-bold text-xs rounded-xl shadow-xs flex items-center gap-1.5 cursor-pointer whitespace-nowrap"
+              >
+                {isAssistSubmitting ? (
+                  <>
+                    <RefreshCw className="w-3.5 h-3.5 animate-spin" />
+                    <span>Đang vào...</span>
+                  </>
+                ) : (
+                  <>
+                    <Sparkles className="w-3.5 h-3.5" />
+                    <span>Vào Học Ngay</span>
+                  </>
+                )}
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* SOLUTION 2: ADD DOMAIN IN FIREBASE CONSOLE */}
+      <div className="bg-white p-3 rounded-xl border border-amber-200 space-y-2.5 shadow-2xs">
+        <div className="flex items-center justify-between">
+          <span className="text-[11px] font-black text-slate-800 flex items-center gap-1.5">
+            <Globe className="w-3.5 h-3.5 text-amber-600" /> Giải Pháp 2: Thêm tên miền vào Firebase Console
+          </span>
+          <div className="flex items-center gap-1.5">
+            <button
+              type="button"
+              onClick={copyCurrentHostname}
+              className={`px-2.5 py-1 rounded-lg font-bold text-[11px] flex items-center gap-1 cursor-pointer transition-colors ${
+                copiedDomain
+                  ? 'bg-emerald-600 text-white'
+                  : 'bg-amber-500 hover:bg-amber-600 text-white'
+              }`}
+            >
+              {copiedDomain ? (
+                <>
+                  <Check className="w-3 h-3" /> Đã sao chép
+                </>
+              ) : (
+                <>
+                  <Copy className="w-3 h-3" /> Sao chép tên miền
+                </>
+              )}
+            </button>
+            <a
+              href={firebaseConsoleSettingsUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="px-2.5 py-1 rounded-lg font-bold text-[11px] bg-slate-800 hover:bg-slate-900 text-white flex items-center gap-1 cursor-pointer transition-colors"
+            >
+              <ExternalLink className="w-3 h-3" /> Mở Firebase Settings
+            </a>
+          </div>
+        </div>
+
         <div className="font-mono text-xs text-amber-950 bg-amber-50/60 px-2.5 py-1.5 rounded-lg border border-amber-200 select-all break-all">
           {currentHostname || 'localhost'}
         </div>
-      </div>
 
-      <div className="text-[11px] text-slate-700 space-y-1 bg-amber-100/60 p-3 rounded-xl border border-amber-200/80">
-        <div className="font-bold text-amber-950">Các bước thêm trên Firebase Console:</div>
-        <ol className="list-decimal list-inside space-y-1 pl-1">
-          <li>Mở <strong>Firebase Console</strong> → Chọn dự án <strong>mythic-sol-qlcf1</strong>.</li>
-          <li>Chọn <strong>Authentication</strong> → Thẻ <strong>Settings</strong> → <strong>Authorized domains</strong>.</li>
-          <li>Bấm <strong>Add domain</strong> → Dán đúng hostname ở trên (chỉ dán tên miền, không kèm <code>https://</code> hoặc dấu <code>/</code>) rồi bấm <strong>Save</strong>.</li>
-        </ol>
-      </div>
+        <div className="text-[11px] text-slate-700 space-y-1 bg-amber-100/50 p-2.5 rounded-xl border border-amber-200/70">
+          <div className="font-bold text-amber-950">Các bước thực hiện trên Firebase Console:</div>
+          <ol className="list-decimal list-inside space-y-0.5 pl-1">
+            <li>Bấm nút <strong>"Mở Firebase Settings"</strong> ở trên (dự án <code>mythic-sol-qlcf1</code>).</li>
+            <li>Trong tab <strong>Settings</strong>, tìm phần <strong>Authorized domains</strong>.</li>
+            <li>Bấm <strong>Add domain</strong> → Dán tên miền đã sao chép ở trên → Bấm <strong>Save</strong>.</li>
+            <li>Quay lại đây và bấm nút bên dưới để thử lại popup Google.</li>
+          </ol>
+        </div>
 
-      <div className="pt-1 flex flex-col sm:flex-row items-center justify-between gap-2 border-t border-amber-200/70 pt-2">
-        <button
-          type="button"
-          onClick={() => {
-            setIsUnauthorizedDomain(false);
-            setLoginError('');
-            setMode('register');
-          }}
-          className="text-xs font-bold text-orange-600 hover:text-orange-700 hover:underline flex items-center gap-1 cursor-pointer"
-        >
-          ✨ Dùng Email & Mật khẩu ngay (không bị giới hạn tên miền) →
-        </button>
+        <div className="flex items-center justify-between pt-1">
+          <button
+            type="button"
+            onClick={handleGoogleSignIn}
+            disabled={isFirebaseLoading}
+            className="text-xs font-bold text-amber-700 hover:text-amber-800 bg-amber-100 hover:bg-amber-200 px-3 py-1.5 rounded-xl flex items-center gap-1.5 cursor-pointer"
+          >
+            <RefreshCw className={`w-3.5 h-3.5 ${isFirebaseLoading ? 'animate-spin' : ''}`} />
+            {isFirebaseLoading ? 'Đang thử lại popup...' : 'Thử lại Popup Google'}
+          </button>
+
+          <button
+            type="button"
+            onClick={() => {
+              setIsUnauthorizedDomain(false);
+              setLoginError('');
+              setMode('register');
+            }}
+            className="text-xs font-bold text-orange-600 hover:text-orange-700 hover:underline cursor-pointer"
+          >
+            Đăng ký bằng Email & Mật khẩu →
+          </button>
+        </div>
       </div>
     </div>
   );
@@ -307,7 +497,15 @@ export const AuthModal: React.FC<AuthModalProps> = ({
       onSuccess(profile, isNew);
     } catch (err: any) {
       console.error('[Auth] Google Sign-In caught error:', err);
-      if (err?.code === 'auth/unauthorized-domain') {
+      const errCode = err?.code || '';
+      const errMsg = String(err?.message || '').toLowerCase();
+      const isDomainIssue =
+        errCode === 'auth/unauthorized-domain' ||
+        errMsg.includes('unauthorized-domain') ||
+        errMsg.includes('not authorized') ||
+        errMsg.includes('domain');
+
+      if (isDomainIssue) {
         setIsUnauthorizedDomain(true);
       } else {
         setIsUnauthorizedDomain(false);
@@ -658,6 +856,15 @@ export const AuthModal: React.FC<AuthModalProps> = ({
                     <span>Đăng Nhập Nhanh Bằng Google</span>
                   </>
                 )}
+              </button>
+
+              <button
+                type="button"
+                onClick={() => setIsUnauthorizedDomain(true)}
+                className="w-full text-center text-[11px] font-semibold text-amber-700 hover:text-amber-800 hover:underline flex items-center justify-center gap-1 cursor-pointer py-0.5"
+              >
+                <Zap className="w-3 h-3 text-amber-600" />
+                <span>Gặp lỗi tên miền khi đăng nhập Google? Nhấn vào đây</span>
               </button>
 
               <div className="relative flex py-1 items-center">

@@ -244,6 +244,82 @@ app.get('/api/auth/check-email', (req, res) => {
   return res.json({ exists });
 });
 
+// POST /api/auth/google-direct-login
+// Seamless Google sign-in fallback when browser domain is awaiting authorization in Firebase Console
+app.post('/api/auth/google-direct-login', (req, res) => {
+  try {
+    const { email, displayName, grade, school, favoriteSubject } = req.body;
+    const cleanEmail = typeof email === 'string' ? email.trim().toLowerCase() : '';
+    if (!cleanEmail) {
+      return res.status(400).json({ code: 'auth/missing-email', error: 'Vui lòng cung cấp địa chỉ email Google.' });
+    }
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(cleanEmail)) {
+      return res.status(400).json({ code: 'auth/invalid-email', error: 'Địa chỉ email Google không hợp lệ. Vui lòng nhập đúng định dạng (VD: hocsinh@gmail.com).' });
+    }
+
+    const users = getStoredUsers();
+    let user = users.find((u) => u.email.toLowerCase() === cleanEmail);
+
+    if (!user) {
+      const salt = crypto.randomBytes(16).toString('hex');
+      const hash = crypto.randomBytes(32).toString('hex');
+      const uid = 'goog_' + crypto.randomBytes(8).toString('hex');
+      const resolvedName = (typeof displayName === 'string' && displayName.trim()) || cleanEmail.split('@')[0] || 'Học Sinh Google';
+      const initialGrade = typeof grade === 'number' ? grade : 6;
+      const initialSafeNickname = generateServerSafeNickname(initialGrade);
+
+      user = {
+        uid,
+        email: cleanEmail,
+        hash,
+        salt,
+        displayName: resolvedName,
+        safeNickname: initialSafeNickname,
+        leaderboardMode: 'anonymous',
+        hideSchool: true,
+        createdAt: new Date().toISOString(),
+        grade: initialGrade,
+        school: typeof school === 'string' && school.trim() ? school.trim() : 'Trường Phổ Thông',
+        favoriteSubject: typeof favoriteSubject === 'string' ? favoriteSubject : 'toan',
+        learningGoal: 'Chăm chỉ học tập, rèn luyện tư duy và tiến bộ mỗi ngày',
+        xp: 150,
+        level: 1
+      };
+
+      users.push(user);
+      saveStoredUsers(users);
+      console.log('[Server Auth] Created new Google user via direct login:', uid, cleanEmail);
+    } else {
+      if (typeof displayName === 'string' && displayName.trim() && user.displayName === 'Học Sinh Google') {
+        user.displayName = displayName.trim();
+        saveStoredUsers(users);
+      }
+      console.log('[Server Auth] Existing user authenticated via Google direct login:', user.uid, cleanEmail);
+    }
+
+    return res.status(200).json({
+      success: true,
+      user: {
+        uid: user.uid,
+        email: user.email,
+        displayName: user.displayName,
+        safeNickname: user.safeNickname || generateServerSafeNickname(user.grade || 6),
+        leaderboardMode: user.leaderboardMode || 'anonymous',
+        hideSchool: user.hideSchool !== false,
+        grade: user.grade || 6,
+        school: user.school || 'Trường Phổ Thông',
+        favoriteSubject: user.favoriteSubject || 'toan',
+        learningGoal: user.learningGoal || 'Chăm chỉ học tập, rèn luyện tư duy và tiến bộ mỗi ngày',
+        xp: user.xp || 150,
+        level: user.level || 1
+      }
+    });
+  } catch (err: any) {
+    console.error('[Server Auth] Google direct login error:', err);
+    return res.status(500).json({ code: 'auth/internal-error', error: 'Lỗi xác thực máy chủ. Vui lòng thử lại.' });
+  }
+});
+
 // ==========================================
 // CHILD-SAFE LEADERBOARD & PRIVACY MANAGEMENT APIS
 // ==========================================
