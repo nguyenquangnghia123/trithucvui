@@ -110,6 +110,16 @@ export interface UserProfile {
   questionHistory?: string[]; // IDs of answered questions for no-repeat logic
   wrongQuestionsHistory?: { questionId: string; subject: SubjectId; topic: string; timestamp: number }[];
   claimedMilestones?: number[]; // Level rewards already claimed
+  privacySettings?: StudentPrivacySettings;
+}
+
+export type LeaderboardPrivacyMode = 'anonymous' | 'private' | 'custom_name';
+
+export interface StudentPrivacySettings {
+  leaderboardMode: LeaderboardPrivacyMode;
+  safeNickname: string;
+  hideSchool: boolean;
+  allowFriendSearch?: boolean;
 }
 
 export interface UserSession {
@@ -176,16 +186,21 @@ export interface LeaderboardUser {
   id: string;
   rank: number;
   fullName: string;
+  displayName?: string;
+  safeNickname?: string;
   username: string;
   avatar: string;
   avatarFrame?: string;
   grade: GradeLevel;
   school: string;
+  isSchoolHidden?: boolean;
   level: number;
   xp: number;
   correctAnswers: number;
   streak: number;
   isCurrentUser?: boolean;
+  privacyMode?: LeaderboardPrivacyMode;
+  encouragingBadge?: string;
 }
 
 export interface QuizResult {

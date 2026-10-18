@@ -22,11 +22,44 @@ interface ServerAuthUser {
   hash: string;
   salt: string;
   displayName: string;
+  safeNickname?: string;
+  leaderboardMode?: 'anonymous' | 'private' | 'custom_name';
+  hideSchool?: boolean;
   createdAt: string;
   grade?: number;
   school?: string;
   favoriteSubject?: string;
   learningGoal?: string;
+  xp?: number;
+  level?: number;
+}
+
+const SERVER_SAFE_NICKNAMES = [
+  'Học Sinh Mặt Trời ☀️',
+  'Chiến Binh Tri Thức 🛡️',
+  'Nhà Thám Hiểm Toán Học 🚀',
+  'Mầm Xanh Chăm Học 🌱',
+  'Sao Sáng Đất Việt ⭐',
+  'Hiệp Sĩ Ngôn Từ 📖',
+  'Thần Đồng Tính Nhanh ⚡',
+  'Búp Măng Non 🎋',
+  'Nhà Thông Thái Nhí 🦉',
+  'Bạn Nhỏ Tinh Anh 🌟'
+];
+
+function generateServerSafeNickname(grade: number = 6): string {
+  const base = SERVER_SAFE_NICKNAMES[Math.floor(Math.random() * SERVER_SAFE_NICKNAMES.length)];
+  const num = Math.floor(100 + Math.random() * 900);
+  return `${base.split(' ')[0]} ${base.split(' ')[1] || 'Nhí'} #${num}`;
+}
+
+function validateServerNickname(name: string): { isValid: boolean; message?: string } {
+  if (!name || typeof name !== 'string') return { isValid: false, message: 'Biệt danh không được để trống.' };
+  const clean = name.trim();
+  if (clean.length < 2 || clean.length > 30) return { isValid: false, message: 'Độ dài biệt danh từ 2-30 ký tự.' };
+  if (/@|(\.com|\.vn|\.edu)/i.test(clean)) return { isValid: false, message: 'Biệt danh không được chứa địa chỉ email.' };
+  if (/(?:\d[\s.-]?){6,}/.test(clean)) return { isValid: false, message: 'Biệt danh không được chứa số điện thoại.' };
+  return { isValid: true };
 }
 
 const DATA_DIR = path.join(process.cwd(), 'data');
@@ -96,6 +129,8 @@ app.post('/api/auth/register', (req, res) => {
     const hash = crypto.scryptSync(password, salt, 64).toString('hex');
     const uid = 'usr_' + crypto.randomBytes(8).toString('hex');
     const resolvedName = (typeof displayName === 'string' && displayName.trim()) || cleanEmail.split('@')[0] || 'Học Sinh';
+    const initialGrade = typeof grade === 'number' ? grade : 6;
+    const initialSafeNickname = generateServerSafeNickname(initialGrade);
 
     const newUser: ServerAuthUser = {
       uid,
@@ -103,17 +138,22 @@ app.post('/api/auth/register', (req, res) => {
       hash,
       salt,
       displayName: resolvedName,
+      safeNickname: initialSafeNickname,
+      leaderboardMode: 'anonymous', // Default: Child-safe anonymous display
+      hideSchool: true, // Default: Protect school name
       createdAt: new Date().toISOString(),
-      grade: typeof grade === 'number' ? grade : 6,
+      grade: initialGrade,
       school: typeof school === 'string' ? school.trim() : '',
       favoriteSubject: typeof favoriteSubject === 'string' ? favoriteSubject : 'toan',
-      learningGoal: typeof learningGoal === 'string' ? learningGoal.trim() : ''
+      learningGoal: typeof learningGoal === 'string' ? learningGoal.trim() : '',
+      xp: 150,
+      level: 1
     };
 
     users.push(newUser);
     saveStoredUsers(users);
 
-    console.log('[Server Auth] Registered new user successfully:', uid, cleanEmail);
+    console.log('[Server Auth] Registered new user with safe privacy defaults:', uid, cleanEmail);
 
     return res.status(201).json({
       success: true,
@@ -121,10 +161,15 @@ app.post('/api/auth/register', (req, res) => {
         uid: newUser.uid,
         email: newUser.email,
         displayName: newUser.displayName,
+        safeNickname: newUser.safeNickname,
+        leaderboardMode: newUser.leaderboardMode,
+        hideSchool: newUser.hideSchool,
         grade: newUser.grade,
         school: newUser.school,
         favoriteSubject: newUser.favoriteSubject,
-        learningGoal: newUser.learningGoal
+        learningGoal: newUser.learningGoal,
+        xp: newUser.xp,
+        level: newUser.level
       }
     });
   } catch (err: any) {
@@ -158,6 +203,11 @@ app.post('/api/auth/login', (req, res) => {
       return res.status(401).json({ code: 'auth/wrong-password', error: 'Email hoặc mật khẩu không chính xác. Vui lòng kiểm tra lại.' });
     }
 
+    // Ensure privacy fields exist on legacy accounts
+    if (!user.leaderboardMode) user.leaderboardMode = 'anonymous';
+    if (!user.safeNickname) user.safeNickname = generateServerSafeNickname(user.grade || 6);
+    if (user.hideSchool === undefined) user.hideSchool = true;
+
     console.log('[Server Auth] User logged in successfully:', user.uid, cleanEmail);
 
     return res.status(200).json({
@@ -166,10 +216,15 @@ app.post('/api/auth/login', (req, res) => {
         uid: user.uid,
         email: user.email,
         displayName: user.displayName,
+        safeNickname: user.safeNickname,
+        leaderboardMode: user.leaderboardMode,
+        hideSchool: user.hideSchool,
         grade: user.grade,
         school: user.school,
         favoriteSubject: user.favoriteSubject,
-        learningGoal: user.learningGoal
+        learningGoal: user.learningGoal,
+        xp: user.xp || 150,
+        level: user.level || 1
       }
     });
   } catch (err: any) {
@@ -187,6 +242,179 @@ app.get('/api/auth/check-email', (req, res) => {
   const users = getStoredUsers();
   const exists = users.some((u) => u.email.toLowerCase() === emailQuery);
   return res.json({ exists });
+});
+
+// ==========================================
+// CHILD-SAFE LEADERBOARD & PRIVACY MANAGEMENT APIS
+// ==========================================
+
+// GET /api/leaderboard
+// Child-safe leaderboard: excludes private students, masks emails/real names/schools
+app.get('/api/leaderboard', (req, res) => {
+  try {
+    const { grade, currentUserId } = req.query;
+    const users = getStoredUsers();
+
+    const publicEntries = users
+      .filter((u) => {
+        // Exclude users who selected 'private' unless it is the user checking their own position
+        if (u.leaderboardMode === 'private') {
+          return Boolean(currentUserId && u.uid === currentUserId);
+        }
+        return true;
+      })
+      .map((u) => {
+        const isSelf = Boolean(currentUserId && u.uid === currentUserId);
+        const mode = u.leaderboardMode || 'anonymous';
+        let safeName = u.safeNickname || generateServerSafeNickname(u.grade || 6);
+
+        if (mode === 'custom_name' && u.displayName) {
+          const check = validateServerNickname(u.displayName);
+          if (check.isValid) {
+            safeName = u.displayName;
+          }
+        } else if (mode === 'private') {
+          safeName = isSelf ? 'Bạn (Chế độ riêng tư 🔒)' : 'Người Học Ẩn Danh 🔒';
+        }
+
+        const maskedSchool = u.hideSchool !== false ? 'Trường Bạn Học Tri Thức' : (u.school || 'Trường Phổ Thông');
+
+        return {
+          id: u.uid,
+          safeNickname: safeName,
+          displayName: safeName,
+          fullName: isSelf ? u.displayName : safeName, // Never leak other students' full real names!
+          grade: u.grade || 6,
+          school: isSelf ? (u.school || 'Trường Phổ Thông') : maskedSchool,
+          isSchoolHidden: u.hideSchool !== false,
+          xp: u.xp || 500,
+          level: u.level || 1,
+          privacyMode: mode,
+          isCurrentUser: isSelf
+        };
+      });
+
+    // Optional grade filter
+    let filtered = publicEntries;
+    if (grade && grade !== 'all') {
+      const gNum = Number(grade);
+      filtered = publicEntries.filter((e) => e.grade === gNum || e.isCurrentUser);
+    }
+
+    // Sort by XP descending
+    filtered.sort((a, b) => b.xp - a.xp);
+    const ranked = filtered.map((item, idx) => ({ ...item, rank: idx + 1 }));
+
+    return res.json({
+      success: true,
+      total: ranked.length,
+      leaderboard: ranked
+    });
+  } catch (err: any) {
+    console.error('[Leaderboard API] Error:', err);
+    return res.status(500).json({ error: 'Không thể tải bảng xếp hạng.' });
+  }
+});
+
+// POST /api/user/privacy
+// Update student privacy preferences safely with validation
+app.post('/api/user/privacy', (req, res) => {
+  try {
+    const { uid, leaderboardMode, safeNickname, hideSchool } = req.body;
+    if (!uid || typeof uid !== 'string') {
+      return res.status(400).json({ error: 'Thiếu mã tài khoản người dùng.' });
+    }
+
+    if (safeNickname) {
+      const val = validateServerNickname(safeNickname);
+      if (!val.isValid) {
+        return res.status(400).json({ error: val.message });
+      }
+    }
+
+    const users = getStoredUsers();
+    const user = users.find((u) => u.uid === uid);
+    if (!user) {
+      return res.status(404).json({ error: 'Không tìm thấy tài khoản người dùng.' });
+    }
+
+    if (leaderboardMode && ['anonymous', 'private', 'custom_name'].includes(leaderboardMode)) {
+      user.leaderboardMode = leaderboardMode;
+    }
+    if (safeNickname) {
+      user.safeNickname = safeNickname.trim();
+    }
+    if (typeof hideSchool === 'boolean') {
+      user.hideSchool = hideSchool;
+    }
+
+    saveStoredUsers(users);
+    console.log(`[Privacy API] Updated privacy settings for user ${uid}: mode=${user.leaderboardMode}, hideSchool=${user.hideSchool}`);
+
+    return res.json({
+      success: true,
+      message: 'Cập nhật thiết lập quyền riêng tư thành công!',
+      privacySettings: {
+        leaderboardMode: user.leaderboardMode,
+        safeNickname: user.safeNickname,
+        hideSchool: user.hideSchool
+      }
+    });
+  } catch (err: any) {
+    console.error('[Privacy API] Error:', err);
+    return res.status(500).json({ error: 'Lỗi cập nhật quyền riêng tư.' });
+  }
+});
+
+// POST /api/user/record-quiz
+// Anti-tamper validation for quiz scores & XP before updating student profile
+app.post('/api/user/record-quiz', (req, res) => {
+  try {
+    const { uid, totalQuestions, correctCount, xpEarned, coinsEarned } = req.body;
+    if (!uid) {
+      return res.status(400).json({ error: 'Thiếu thông tin người dùng.' });
+    }
+
+    const total = Number(totalQuestions) || 0;
+    const correct = Number(correctCount) || 0;
+    const xp = Number(xpEarned) || 0;
+    const coins = Number(coinsEarned) || 0;
+
+    // Strict validation: correct answers cannot exceed total questions
+    if (correct > total || correct < 0 || total < 0) {
+      return res.status(400).json({ error: 'Dữ liệu kết quả bài thi không hợp lệ.' });
+    }
+
+    // Strict bounds: realistic maximum XP & Coins per session
+    const maxRealisticXp = total * 50 + 200;
+    const maxRealisticCoins = total * 25 + 100;
+
+    if (xp > maxRealisticXp || coins > maxRealisticCoins) {
+      console.warn(`[Anti-Tamper] Flagged suspicious score payload from uid ${uid}: xp=${xp}, maxAllowed=${maxRealisticXp}`);
+      return res.status(400).json({
+        error: 'Điểm số vượt quá giới hạn bài học quy định.',
+        valid: false
+      });
+    }
+
+    // Update user stats in users_auth.json if registered
+    const users = getStoredUsers();
+    const user = users.find((u) => u.uid === uid);
+    if (user) {
+      user.xp = (user.xp || 0) + xp;
+      user.level = Math.max(1, Math.floor((user.xp || 0) / 300) + 1);
+      saveStoredUsers(users);
+    }
+
+    return res.json({
+      success: true,
+      verified: true,
+      xpAwarded: xp,
+      coinsAwarded: coins
+    });
+  } catch (err: any) {
+    return res.status(500).json({ error: err.message });
+  }
 });
 
 // Lazy init Gemini client

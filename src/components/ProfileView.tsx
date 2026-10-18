@@ -1,9 +1,10 @@
 import React, { useState } from 'react';
-import { UserProfile, GradeLevel, SubjectId } from '../types';
+import { UserProfile, GradeLevel, SubjectId, LeaderboardPrivacyMode, StudentPrivacySettings } from '../types';
 import { SUBJECTS } from '../data/subjects';
 import { StorageService } from '../services/storage';
 import { soundManager } from '../services/sound';
 import { auth, FirebaseDataService } from '../services/firebase';
+import { generateSafeNickname, validateSafeNickname } from '../data/leaderboardData';
 import { 
   User, 
   Settings, 
@@ -19,8 +20,11 @@ import {
   Sparkles,
   Edit2,
   Cloud,
-  CloudCheck,
-  RefreshCw
+  RefreshCw,
+  ShieldCheck,
+  Lock,
+  Eye,
+  EyeOff
 } from 'lucide-react';
 
 interface ProfileViewProps {
@@ -43,6 +47,19 @@ export const ProfileView: React.FC<ProfileViewProps> = ({
   const [saveToast, setSaveToast] = useState(false);
   const [isSyncing, setIsSyncing] = useState(false);
   const [syncStatus, setSyncStatus] = useState<string | null>(null);
+
+  // Privacy settings state
+  const currentPrivacy: StudentPrivacySettings = user.privacySettings || {
+    leaderboardMode: 'anonymous',
+    safeNickname: generateSafeNickname(user.grade),
+    hideSchool: true,
+  };
+
+  const [privacyMode, setPrivacyMode] = useState<LeaderboardPrivacyMode>(currentPrivacy.leaderboardMode);
+  const [safeNickname, setSafeNickname] = useState<string>(currentPrivacy.safeNickname || '');
+  const [hideSchoolOnLeaderboard, setHideSchoolOnLeaderboard] = useState<boolean>(currentPrivacy.hideSchool !== false);
+  const [privacyError, setPrivacyError] = useState<string>('');
+  const [privacySuccessToast, setPrivacySuccessToast] = useState<string | null>(null);
 
   const handleManualSync = async () => {
     if (!auth.currentUser) {
@@ -86,6 +103,53 @@ export const ProfileView: React.FC<ProfileViewProps> = ({
     setTimeout(() => setSaveToast(false), 3000);
   };
 
+  const handleSavePrivacySettings = async () => {
+    const val = validateSafeNickname(safeNickname);
+    if (!val.isValid) {
+      setPrivacyError(val.message || 'Biệt danh không hợp lệ.');
+      return;
+    }
+    setPrivacyError('');
+
+    const newSettings: StudentPrivacySettings = {
+      leaderboardMode: privacyMode,
+      safeNickname: safeNickname.trim(),
+      hideSchool: hideSchoolOnLeaderboard,
+      allowFriendSearch: false,
+    };
+
+    const updated = StorageService.updatePrivacySettings(newSettings);
+    if (updated) {
+      onUserUpdate(updated);
+
+      // Also sync to server endpoint
+      try {
+        await fetch('/api/user/privacy', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            uid: updated.id,
+            leaderboardMode: privacyMode,
+            safeNickname: safeNickname.trim(),
+            hideSchool: hideSchoolOnLeaderboard,
+          }),
+        });
+      } catch {
+        // ignore offline
+      }
+
+      soundManager.playCorrect();
+      setPrivacySuccessToast('Đã lưu cài đặt bảo mật và quyền riêng tư thành công!');
+      setTimeout(() => setPrivacySuccessToast(null), 3500);
+    }
+  };
+
+  const handleRollRandomNickname = () => {
+    const nextPick = generateSafeNickname(user.grade);
+    setSafeNickname(nextPick);
+    soundManager.playCoin();
+  };
+
   const handleSelectAvatar = (av: string) => {
     const updated = { ...user, avatar: av };
     StorageService.saveUserProfile(updated);
@@ -104,9 +168,16 @@ export const ProfileView: React.FC<ProfileViewProps> = ({
     <div className="max-w-4xl mx-auto space-y-6 pb-12">
       {/* Toast */}
       {saveToast && (
-        <div className="p-4 bg-emerald-50 border border-emerald-200 text-emerald-800 text-xs font-bold rounded-2xl flex items-center gap-2 shadow-sm animate-in fade-in">
+        <div className="p-4 bg-emerald-50 border border-emerald-200 text-emerald-800 text-xs font-bold rounded-2xl flex items-center gap-2 shadow-xs animate-in fade-in">
           <CheckCircle2 className="w-4 h-4 text-emerald-600" />
           Đã lưu thông tin hồ sơ thành công!
+        </div>
+      )}
+
+      {privacySuccessToast && (
+        <div className="p-4 bg-emerald-50 border border-emerald-200 text-emerald-800 text-xs font-bold rounded-2xl flex items-center gap-2 shadow-xs animate-in fade-in">
+          <ShieldCheck className="w-4 h-4 text-emerald-600 shrink-0" />
+          <span>{privacySuccessToast}</span>
         </div>
       )}
 
@@ -142,13 +213,29 @@ export const ProfileView: React.FC<ProfileViewProps> = ({
               </span>
             </div>
 
+            {/* Safe Nickname & Privacy Badge */}
+            <div className="flex items-center gap-2 justify-center sm:justify-start flex-wrap text-xs pt-0.5">
+              <span className="px-2.5 py-0.5 rounded-lg bg-emerald-50 text-emerald-800 border border-emerald-200 font-bold flex items-center gap-1">
+                <ShieldCheck className="w-3.5 h-3.5 text-emerald-600" />
+                Biệt danh hiển thị: {currentPrivacy.safeNickname || 'Chưa đặt'}
+              </span>
+              <span className="text-slate-400 font-medium">
+                • {currentPrivacy.leaderboardMode === 'private' ? 'Chế độ riêng tư 🔒' : 'Hiển thị an toàn 🛡️'}
+              </span>
+            </div>
+
             <p className="text-xs text-slate-500 font-medium">
-              @{user.username} • {user.email || 'Học sinh chính thức'}
+              🔒 Tài khoản: {user.email || 'Học sinh chính thức'} (Bảo mật riêng tư)
             </p>
 
             <div className="text-xs text-slate-600 flex items-center justify-center sm:justify-start gap-1.5 pt-1 font-medium">
               <School className="w-3.5 h-3.5 text-slate-400" />
               <span>{user.school || 'Trường Phổ Thông'}</span>
+              {currentPrivacy.hideSchool !== false && (
+                <span className="text-[10px] text-emerald-700 bg-emerald-50 px-1.5 py-0.5 rounded font-semibold">
+                  (Đã ẩn trường trên BXH 🛡️)
+                </span>
+              )}
             </div>
 
             <div className="text-xs text-amber-700 bg-amber-50 px-3 py-1 rounded-xl font-semibold inline-block border border-amber-200/60">
@@ -197,6 +284,164 @@ export const ProfileView: React.FC<ProfileViewProps> = ({
           <span>{syncStatus}</span>
         </div>
       )}
+
+      {/* DEDICATED CHILD PRIVACY & SAFETY CARD */}
+      <div className="bg-white rounded-3xl p-6 sm:p-7 border border-emerald-200/80 shadow-xs space-y-5">
+        <div className="flex items-center justify-between pb-3 border-b border-slate-100">
+          <div className="flex items-center gap-2.5">
+            <div className="w-9 h-9 rounded-xl bg-emerald-100 text-emerald-800 flex items-center justify-center text-lg">
+              🛡️
+            </div>
+            <div>
+              <h3 className="font-extrabold text-base text-slate-800">
+                Bảo Vệ Quyền Riêng Tư & Dữ Liệu Học Sinh
+              </h3>
+              <p className="text-xs text-slate-500">
+                Tuân thủ nguyên tắc bảo vệ dữ liệu trẻ em theo Luật Trẻ em và Nghị định 13/2023/NĐ-CP
+              </p>
+            </div>
+          </div>
+          <span className="px-2.5 py-1 rounded-full bg-emerald-50 text-emerald-800 text-[11px] font-bold border border-emerald-200">
+            Bảo vệ chủ động
+          </span>
+        </div>
+
+        {/* 3 Privacy Modes */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+          <div
+            onClick={() => setPrivacyMode('anonymous')}
+            className={`p-4 rounded-2xl border-2 transition-all cursor-pointer space-y-1 ${
+              privacyMode === 'anonymous'
+                ? 'border-emerald-500 bg-emerald-50/70 shadow-xs'
+                : 'border-slate-200 hover:bg-slate-50'
+            }`}
+          >
+            <div className="flex items-center justify-between">
+              <span className="text-xl">🛡️</span>
+              {privacyMode === 'anonymous' && (
+                <CheckCircle2 className="w-4 h-4 text-emerald-600" />
+              )}
+            </div>
+            <div className="font-extrabold text-xs text-slate-800 pt-1">
+              Biệt danh an toàn (Mặc định)
+            </div>
+            <div className="text-[11px] text-slate-500 leading-relaxed">
+              Tên thật và trường học được ẩn. Chỉ hiển thị biệt danh vui nhộn trên bảng xếp hạng.
+            </div>
+          </div>
+
+          <div
+            onClick={() => setPrivacyMode('private')}
+            className={`p-4 rounded-2xl border-2 transition-all cursor-pointer space-y-1 ${
+              privacyMode === 'private'
+                ? 'border-emerald-500 bg-emerald-50/70 shadow-xs'
+                : 'border-slate-200 hover:bg-slate-50'
+            }`}
+          >
+            <div className="flex items-center justify-between">
+              <span className="text-xl">🔒</span>
+              {privacyMode === 'private' && (
+                <CheckCircle2 className="w-4 h-4 text-emerald-600" />
+              )}
+            </div>
+            <div className="font-extrabold text-xs text-slate-800 pt-1">
+              Riêng tư hoàn toàn
+            </div>
+            <div className="text-[11px] text-slate-500 leading-relaxed">
+              Không xuất hiện trên bất kỳ bảng xếp hạng nào. Điểm số chỉ hiển thị cho cá nhân em.
+            </div>
+          </div>
+
+          <div
+            onClick={() => setPrivacyMode('custom_name')}
+            className={`p-4 rounded-2xl border-2 transition-all cursor-pointer space-y-1 ${
+              privacyMode === 'custom_name'
+                ? 'border-emerald-500 bg-emerald-50/70 shadow-xs'
+                : 'border-slate-200 hover:bg-slate-50'
+            }`}
+          >
+            <div className="flex items-center justify-between">
+              <span className="text-xl">🌟</span>
+              {privacyMode === 'custom_name' && (
+                <CheckCircle2 className="w-4 h-4 text-emerald-600" />
+              )}
+            </div>
+            <div className="font-extrabold text-xs text-slate-800 pt-1">
+              Tên tự chọn an toàn
+            </div>
+            <div className="text-[11px] text-slate-500 leading-relaxed">
+              Tự chọn tên hiển thị đã qua kiểm duyệt bảo mật (không chứa số điện thoại hay email).
+            </div>
+          </div>
+        </div>
+
+        {/* Nickname setting */}
+        {privacyMode !== 'private' && (
+          <div className="p-4 rounded-2xl bg-slate-50 border border-slate-200/80 space-y-2">
+            <div className="flex items-center justify-between">
+              <label className="text-xs font-bold text-slate-700">
+                Biệt danh hiển thị của em:
+              </label>
+              <button
+                type="button"
+                onClick={handleRollRandomNickname}
+                className="text-xs font-bold text-emerald-700 hover:text-emerald-800 cursor-pointer flex items-center gap-1"
+              >
+                🎲 Đổi biệt danh ngẫu nhiên
+              </button>
+            </div>
+
+            <input
+              type="text"
+              value={safeNickname}
+              onChange={(e) => {
+                setSafeNickname(e.target.value);
+                setPrivacyError('');
+              }}
+              placeholder="VD: Học Sinh Mặt Trời ☀️"
+              className="w-full px-3.5 py-2.5 bg-white border border-slate-200 rounded-xl text-xs font-bold text-slate-800 focus:outline-none focus:ring-2 focus:ring-emerald-400"
+            />
+
+            {privacyError && (
+              <div className="text-[11px] text-rose-600 font-bold">
+                ⚠️ {privacyError}
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* Hide school toggle */}
+        <div className="p-3.5 rounded-2xl bg-slate-50 border border-slate-200/80 flex items-center justify-between">
+          <div className="flex items-center gap-2.5">
+            <School className="w-4 h-4 text-slate-500" />
+            <div>
+              <div className="text-xs font-bold text-slate-800">
+                Ẩn thông tin trường học trên bảng xếp hạng
+              </div>
+              <div className="text-[11px] text-slate-500">
+                Ngăn chặn việc tiết lộ vị trí trường học của bạn cho người khác
+              </div>
+            </div>
+          </div>
+          <input
+            type="checkbox"
+            checked={hideSchoolOnLeaderboard}
+            onChange={(e) => setHideSchoolOnLeaderboard(e.target.checked)}
+            className="w-4 h-4 accent-emerald-600 rounded cursor-pointer"
+          />
+        </div>
+
+        <div className="flex justify-end pt-1">
+          <button
+            type="button"
+            onClick={handleSavePrivacySettings}
+            className="px-5 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-bold shadow-xs cursor-pointer flex items-center gap-1.5 transition-colors"
+          >
+            <CheckCircle2 className="w-4 h-4" />
+            <span>Lưu Cài Đặt Quyền Riêng Tư</span>
+          </button>
+        </div>
+      </div>
 
       {/* Key Metrics Overview Cards */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
@@ -340,7 +585,7 @@ export const ProfileView: React.FC<ProfileViewProps> = ({
 
             <div>
               <label className="text-xs font-bold text-slate-700 block mb-1">
-                Trường Học
+                Trường Học <span className="text-[10px] text-emerald-600 font-normal">(🔒 Tuỳ chọn - Được bảo mật riêng tư)</span>
               </label>
               <input
                 type="text"

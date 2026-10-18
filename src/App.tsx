@@ -527,7 +527,7 @@ export const App: React.FC = () => {
         )}
 
         {user && currentTab === 'leaderboard' && (
-          <LeaderboardView user={user} />
+          <LeaderboardView user={user} onUserUpdate={handleUserUpdate} />
         )}
 
         {user && currentTab === 'achievements' && (

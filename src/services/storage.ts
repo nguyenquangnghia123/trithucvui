@@ -1,7 +1,24 @@
-import { UserProfile, GradeLevel, SubjectId, Achievement, DailyMission, LeaderboardUser, UserSession, StoredAccount } from '../types';
+import { 
+  UserProfile, 
+  GradeLevel, 
+  SubjectId, 
+  Achievement, 
+  DailyMission, 
+  LeaderboardUser, 
+  UserSession, 
+  StoredAccount,
+  StudentPrivacySettings,
+  LeaderboardPrivacyMode
+} from '../types';
 import { INITIAL_ACHIEVEMENTS } from '../data/achievements';
 import { INITIAL_DAILY_MISSIONS } from '../data/dailyMissions';
-import { MOCK_GLOBAL_LEADERBOARD, MOCK_FRIENDS_LEADERBOARD } from '../data/leaderboardData';
+import { 
+  MOCK_GLOBAL_LEADERBOARD, 
+  MOCK_FRIENDS_LEADERBOARD,
+  generateSafeNickname,
+  getSafeDisplayName,
+  validateSafeNickname
+} from '../data/leaderboardData';
 import { 
   calculateLevelFromXp, 
   getLevelProgress, 
@@ -143,6 +160,57 @@ export class StorageService {
     }
   }
 
+  // Ensure child-safe privacy defaults on profile
+  public static ensurePrivacyDefaults(user: UserProfile): UserProfile {
+    if (!user) return user;
+    let changed = false;
+    if (!user.privacySettings) {
+      user.privacySettings = {
+        leaderboardMode: 'anonymous', // Default: Safe anonymous alias
+        safeNickname: generateSafeNickname(user.grade),
+        hideSchool: true, // Default: Protect student's school
+        allowFriendSearch: false,
+      };
+      changed = true;
+    } else {
+      if (!user.privacySettings.safeNickname) {
+        user.privacySettings.safeNickname = generateSafeNickname(user.grade);
+        changed = true;
+      }
+      if (user.privacySettings.hideSchool === undefined) {
+        user.privacySettings.hideSchool = true;
+        changed = true;
+      }
+      if (!user.privacySettings.leaderboardMode) {
+        user.privacySettings.leaderboardMode = 'anonymous';
+        changed = true;
+      }
+    }
+    if (changed) {
+      try {
+        localStorage.setItem(STORAGE_KEYS.USER_PROFILE, JSON.stringify(user));
+      } catch {}
+    }
+    return user;
+  }
+
+  // Update student privacy preferences
+  public static updatePrivacySettings(privacy: Partial<StudentPrivacySettings>): UserProfile | null {
+    const user = this.getUserProfile();
+    if (!user) return null;
+    user.privacySettings = {
+      ...(user.privacySettings || {
+        leaderboardMode: 'anonymous',
+        safeNickname: generateSafeNickname(user.grade),
+        hideSchool: true,
+        allowFriendSearch: false,
+      }),
+      ...privacy,
+    } as StudentPrivacySettings;
+    this.saveUserProfile(user);
+    return user;
+  }
+
   // Get active profile for the current valid session. Returns null if not logged in.
   public static getUserProfile(): UserProfile | null {
     this.cleanupLegacyTestData();
@@ -156,7 +224,8 @@ export class StorageService {
     const account = accounts[session.userId];
     if (account && account.profile && account.profile.id !== 'user_default') {
       const withHearts = this.processHeartRegen(account.profile);
-      return this.processDailyStreak(withHearts);
+      const withStreak = this.processDailyStreak(withHearts);
+      return this.ensurePrivacyDefaults(withStreak);
     }
 
     // Fallback: check cached active profile
@@ -166,7 +235,8 @@ export class StorageService {
         const user: UserProfile = JSON.parse(raw);
         if (user && user.id === session.userId && user.id !== 'user_default') {
           const withHearts = this.processHeartRegen(user);
-          return this.processDailyStreak(withHearts);
+          const withStreak = this.processDailyStreak(withHearts);
+          return this.ensurePrivacyDefaults(withStreak);
         }
       } catch {
         // ignore
@@ -563,7 +633,7 @@ export class StorageService {
     return { user, mission };
   }
 
-  // Leaderboard data
+  // Leaderboard data with child-friendly privacy protections
   public static getLeaderboards(currentUser?: UserProfile): {
     global: LeaderboardUser[];
     school: LeaderboardUser[];
@@ -574,24 +644,42 @@ export class StorageService {
     let globalList = [...MOCK_GLOBAL_LEADERBOARD];
 
     if (currentUser) {
-      // Check if user is in global
-      const existingIdx = globalList.findIndex((u) => u.id === currentUser.id);
-      const userEntry: LeaderboardUser = {
-        id: currentUser.id,
-        rank: 0,
-        fullName: currentUser.fullName,
-        username: currentUser.username,
-        avatar: currentUser.avatar,
-        avatarFrame: currentUser.avatarFrame,
-        grade: currentUser.grade,
-        school: currentUser.school || 'Trường phổ thông',
-        level: currentUser.level,
-        xp: currentUser.xp,
-        correctAnswers: Object.values(currentUser.subjectStats).reduce((acc, s) => acc + s.correctCount, 0),
-        streak: currentUser.highestStreak,
-        isCurrentUser: true,
+      const ensuredUser = this.ensurePrivacyDefaults(currentUser);
+      const privacy = ensuredUser.privacySettings || {
+        leaderboardMode: 'anonymous',
+        safeNickname: generateSafeNickname(ensuredUser.grade),
+        hideSchool: true,
       };
 
+      // Compute display name based on privacy settings
+      const safeName = getSafeDisplayName(
+        ensuredUser.fullName,
+        privacy.safeNickname,
+        privacy.leaderboardMode
+      );
+
+      const userEntry: LeaderboardUser = {
+        id: ensuredUser.id,
+        rank: 0,
+        fullName: safeName,
+        displayName: safeName,
+        safeNickname: privacy.safeNickname,
+        username: privacy.leaderboardMode === 'private' ? 'an_danh' : ensuredUser.username,
+        avatar: ensuredUser.avatar,
+        avatarFrame: ensuredUser.avatarFrame,
+        grade: ensuredUser.grade,
+        school: privacy.hideSchool ? 'Trường Bạn Học Tri Thức' : (ensuredUser.school || 'Trường Phổ Thông'),
+        isSchoolHidden: privacy.hideSchool,
+        level: ensuredUser.level,
+        xp: ensuredUser.xp,
+        correctAnswers: Object.values(ensuredUser.subjectStats || {}).reduce((acc, s) => acc + (s.correctCount || 0), 0),
+        streak: Math.max(ensuredUser.dailyStreak || 1, ensuredUser.highestStreak || 1),
+        isCurrentUser: true,
+        privacyMode: privacy.leaderboardMode,
+        encouragingBadge: ensuredUser.dailyStreak >= 7 ? 'Chuyên Cần Vàng 🏆' : ensuredUser.dailyStreak >= 3 ? 'Chuyên Cần Bạc 🥈' : 'Người Học Tích Cực ⭐',
+      };
+
+      const existingIdx = globalList.findIndex((u) => u.id === ensuredUser.id);
       if (existingIdx >= 0) {
         globalList[existingIdx] = userEntry;
       } else {
@@ -603,26 +691,38 @@ export class StorageService {
     globalList.sort((a, b) => b.xp - a.xp);
     globalList = globalList.map((u, i) => ({ ...u, rank: i + 1 }));
 
-    // Filter subsets
-    const schoolList = globalList.filter((u) => u.school.includes('Giảng Võ') || u.isCurrentUser);
-    const gradeList = globalList.filter((u) => u.grade === (currentUser?.grade || 7) || u.isCurrentUser);
+    // Filter subsets by grade / peer group
+    const gradeList = globalList.filter((u) => u.grade === (currentUser?.grade || 6) || u.isCurrentUser);
+    const schoolList = globalList.filter((u) => u.isCurrentUser || u.grade === (currentUser?.grade || 6));
     const classroomList = globalList.slice(0, 5);
+
     const friendsList = [...MOCK_FRIENDS_LEADERBOARD];
     if (currentUser) {
+      const ensuredUser = this.ensurePrivacyDefaults(currentUser);
+      const safeName = getSafeDisplayName(
+        ensuredUser.fullName,
+        ensuredUser.privacySettings?.safeNickname,
+        ensuredUser.privacySettings?.leaderboardMode
+      );
       friendsList.push({
-        id: currentUser.id,
+        id: ensuredUser.id,
         rank: 0,
-        fullName: currentUser.fullName,
-        username: currentUser.username,
-        avatar: currentUser.avatar,
-        avatarFrame: currentUser.avatarFrame,
-        grade: currentUser.grade,
-        school: currentUser.school || '',
-        level: currentUser.level,
-        xp: currentUser.xp,
-        correctAnswers: 120,
-        streak: currentUser.highestStreak,
+        fullName: safeName,
+        displayName: safeName,
+        safeNickname: ensuredUser.privacySettings?.safeNickname,
+        username: ensuredUser.username,
+        avatar: ensuredUser.avatar,
+        avatarFrame: ensuredUser.avatarFrame,
+        grade: ensuredUser.grade,
+        school: 'Cùng nhóm học',
+        isSchoolHidden: true,
+        level: ensuredUser.level,
+        xp: ensuredUser.xp,
+        correctAnswers: Object.values(ensuredUser.subjectStats || {}).reduce((acc, s) => acc + (s.correctCount || 0), 0),
+        streak: Math.max(ensuredUser.dailyStreak || 1, ensuredUser.highestStreak || 1),
         isCurrentUser: true,
+        privacyMode: ensuredUser.privacySettings?.leaderboardMode || 'anonymous',
+        encouragingBadge: 'Đồng Đội Thân Thiết 🤝',
       });
       friendsList.sort((a, b) => b.xp - a.xp);
       friendsList.forEach((u, i) => (u.rank = i + 1));

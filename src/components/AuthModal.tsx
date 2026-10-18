@@ -3,7 +3,8 @@ import { UserProfile, GradeLevel, SubjectId } from '../types';
 import { StorageService } from '../services/storage';
 import { soundManager } from '../services/sound';
 import { FirebaseAuthService, FirebaseDataService } from '../services/firebase';
-import { Sparkles, CheckCircle2, ArrowRight, UserPlus, LogIn, Heart, ShieldCheck, X, RefreshCw } from 'lucide-react';
+import { generateSafeNickname } from '../data/leaderboardData';
+import { Sparkles, CheckCircle2, ArrowRight, UserPlus, LogIn, Heart, ShieldCheck, X, RefreshCw, Lock, Copy, Check, Globe } from 'lucide-react';
 
 interface AuthModalProps {
   isOpen?: boolean;
@@ -31,6 +32,100 @@ export const AuthModal: React.FC<AuthModalProps> = ({
   const [loginEmail, setLoginEmail] = useState('');
   const [loginPassword, setLoginPassword] = useState('');
   const [loginError, setLoginError] = useState('');
+  const [isUnauthorizedDomain, setIsUnauthorizedDomain] = useState(false);
+  const [copiedDomain, setCopiedDomain] = useState(false);
+
+  const currentHostname = typeof window !== 'undefined' ? window.location.hostname : '';
+
+  const copyCurrentHostname = () => {
+    if (currentHostname) {
+      navigator.clipboard.writeText(currentHostname);
+      setCopiedDomain(true);
+      setTimeout(() => setCopiedDomain(false), 2500);
+    }
+  };
+
+  const renderUnauthorizedDomainGuide = () => (
+    <div className="p-4 bg-amber-50/95 border-2 border-amber-300 rounded-2xl text-slate-800 space-y-3 animate-in fade-in shadow-xs text-left">
+      <div className="flex items-start gap-2.5">
+        <span className="text-xl shrink-0">⚠️</span>
+        <div className="flex-1">
+          <div className="flex items-center justify-between">
+            <h4 className="font-bold text-amber-950 text-sm">
+              Tên miền chưa được cấp quyền trong Firebase
+            </h4>
+            <button
+              type="button"
+              onClick={() => {
+                setIsUnauthorizedDomain(false);
+                setLoginError('');
+              }}
+              className="text-slate-400 hover:text-slate-600 p-0.5 rounded cursor-pointer"
+              title="Đóng thông báo"
+            >
+              <X className="w-4 h-4" />
+            </button>
+          </div>
+          <p className="text-xs text-amber-900 mt-1 leading-relaxed">
+            Firebase Google OAuth yêu cầu tên miền đang chạy phải nằm trong danh sách <strong>Tên miền được ủy quyền (Authorized domains)</strong> của dự án <code>mythic-sol-qlcf1</code>.
+          </p>
+        </div>
+      </div>
+
+      <div className="bg-white p-3 rounded-xl border border-amber-200 space-y-1.5 shadow-2xs">
+        <div className="flex items-center justify-between">
+          <span className="text-[11px] font-bold text-slate-700 flex items-center gap-1.5">
+            <Globe className="w-3.5 h-3.5 text-amber-600" /> Hostname hiện tại của ứng dụng:
+          </span>
+          <button
+            type="button"
+            onClick={copyCurrentHostname}
+            className={`px-2.5 py-1 rounded-lg font-bold text-[11px] flex items-center gap-1 cursor-pointer transition-colors ${
+              copiedDomain
+                ? 'bg-emerald-600 text-white'
+                : 'bg-amber-500 hover:bg-amber-600 text-white'
+            }`}
+          >
+            {copiedDomain ? (
+              <>
+                <Check className="w-3 h-3" /> Đã sao chép
+              </>
+            ) : (
+              <>
+                <Copy className="w-3 h-3" /> Sao chép tên miền
+              </>
+            )}
+          </button>
+        </div>
+        <div className="font-mono text-xs text-amber-950 bg-amber-50/60 px-2.5 py-1.5 rounded-lg border border-amber-200 select-all break-all">
+          {currentHostname || 'localhost'}
+        </div>
+      </div>
+
+      <div className="text-[11px] text-slate-700 space-y-1 bg-amber-100/60 p-3 rounded-xl border border-amber-200/80">
+        <div className="font-bold text-amber-950">Các bước thêm trên Firebase Console:</div>
+        <ol className="list-decimal list-inside space-y-1 pl-1">
+          <li>Mở <strong>Firebase Console</strong> → Chọn dự án <strong>mythic-sol-qlcf1</strong>.</li>
+          <li>Chọn <strong>Authentication</strong> → Thẻ <strong>Settings</strong> → <strong>Authorized domains</strong>.</li>
+          <li>Bấm <strong>Add domain</strong> → Dán đúng hostname ở trên (chỉ dán tên miền, không kèm <code>https://</code> hoặc dấu <code>/</code>) rồi bấm <strong>Save</strong>.</li>
+        </ol>
+      </div>
+
+      <div className="pt-1 flex flex-col sm:flex-row items-center justify-between gap-2 border-t border-amber-200/70 pt-2">
+        <button
+          type="button"
+          onClick={() => {
+            setIsUnauthorizedDomain(false);
+            setLoginError('');
+            setMode('register');
+          }}
+          className="text-xs font-bold text-orange-600 hover:text-orange-700 hover:underline flex items-center gap-1 cursor-pointer"
+        >
+          ✨ Dùng Email & Mật khẩu ngay (không bị giới hạn tên miền) →
+        </button>
+      </div>
+    </div>
+  );
 
   // Register form state
   const [fullName, setFullName] = useState('');
@@ -91,6 +186,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
     if (isFirebaseLoading) return;
     setIsFirebaseLoading(true);
     setLoginError('');
+    setIsUnauthorizedDomain(false);
     console.log('[Auth] Google OAuth started');
 
     try {
@@ -176,7 +272,13 @@ export const AuthModal: React.FC<AuthModalProps> = ({
           highestStreak: 0,
           dailyStreak: 1,
           lastActiveDate: new Date().toISOString().split('T')[0],
-          joinedDate: new Date().toISOString().split('T')[0]
+          joinedDate: new Date().toISOString().split('T')[0],
+          privacySettings: {
+            leaderboardMode: 'anonymous',
+            safeNickname: generateSafeNickname(6),
+            hideSchool: true,
+            allowFriendSearch: false,
+          }
         };
       } else {
         // Sync newer details from Google profile if available
@@ -205,6 +307,11 @@ export const AuthModal: React.FC<AuthModalProps> = ({
       onSuccess(profile, isNew);
     } catch (err: any) {
       console.error('[Auth] Google Sign-In caught error:', err);
+      if (err?.code === 'auth/unauthorized-domain') {
+        setIsUnauthorizedDomain(true);
+      } else {
+        setIsUnauthorizedDomain(false);
+      }
       const friendlyMessage = getFriendlyAuthError(err);
       setLoginError(friendlyMessage);
     } finally {
@@ -425,6 +532,12 @@ export const AuthModal: React.FC<AuthModalProps> = ({
         dailyStreak: 1,
         lastActiveDate: new Date().toISOString().split('T')[0],
         joinedDate: new Date().toISOString().split('T')[0],
+        privacySettings: {
+          leaderboardMode: 'anonymous',
+          safeNickname: generateSafeNickname(grade),
+          hideSchool: true,
+          allowFriendSearch: false,
+        },
       };
 
       // 3. Establish active session and save profile locally with provider 'firebase_email'
@@ -502,7 +615,9 @@ export const AuthModal: React.FC<AuthModalProps> = ({
               </div>
             </div>
 
-            {loginError && (
+            {isUnauthorizedDomain ? (
+              renderUnauthorizedDomainGuide()
+            ) : loginError ? (
               <div className="p-3 bg-rose-50 border border-rose-200 text-rose-700 text-xs rounded-xl flex items-start gap-2 animate-in fade-in">
                 <span className="text-base shrink-0">⚠️</span>
                 <div className="space-y-1">
@@ -516,7 +631,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
                   </button>
                 </div>
               </div>
-            )}
+            ) : null}
 
             <div className="space-y-3 pt-2">
               {/* Google Sign-In with Firebase Auth */}
@@ -586,11 +701,23 @@ export const AuthModal: React.FC<AuthModalProps> = ({
               </button>
             </div>
 
-            {loginError && (
-              <div className="p-3 bg-rose-50 border border-rose-200 text-rose-700 text-xs rounded-xl">
-                {loginError}
+            {isUnauthorizedDomain ? (
+              renderUnauthorizedDomainGuide()
+            ) : loginError ? (
+              <div className="p-3 bg-rose-50 border border-rose-200 text-rose-700 text-xs rounded-xl flex items-start gap-2">
+                <span className="text-base shrink-0">⚠️</span>
+                <div className="space-y-1 flex-1">
+                  <div className="font-semibold">{loginError}</div>
+                  <button
+                    type="button"
+                    onClick={() => setLoginError('')}
+                    className="text-[11px] text-rose-600 hover:underline font-medium"
+                  >
+                    Đóng thông báo
+                  </button>
+                </div>
               </div>
-            )}
+            ) : null}
 
             <div>
               <label className="block text-xs font-bold text-slate-700 mb-1">
@@ -794,14 +921,17 @@ export const AuthModal: React.FC<AuthModalProps> = ({
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <div>
-                <label className="block text-xs font-bold text-slate-700 mb-1">
-                  Trường học (không bắt buộc)
+                <label className="block text-xs font-bold text-slate-700 mb-1 flex items-center justify-between">
+                  <span>Trường học</span>
+                  <span className="text-[10px] text-emerald-600 font-semibold flex items-center gap-0.5">
+                    <ShieldCheck className="w-3 h-3" /> Bảo mật riêng tư
+                  </span>
                 </label>
                 <input
                   type="text"
                   value={school}
                   onChange={(e) => setSchool(e.target.value)}
-                  placeholder="VD: THCS Chu Văn An"
+                  placeholder="Không bắt buộc (sẽ được ẩn trên BXH)"
                   className="w-full px-3 py-2 rounded-xl border border-slate-200 focus:ring-2 focus:ring-amber-500 text-sm"
                 />
               </div>
@@ -835,6 +965,11 @@ export const AuthModal: React.FC<AuthModalProps> = ({
                 placeholder="VD: Đạt học sinh Giỏi, nâng cao tiếng Anh, rèn luyện tư duy logic"
                 className="w-full px-3 py-2 rounded-xl border border-slate-200 focus:ring-2 focus:ring-amber-500 text-sm"
               />
+            </div>
+
+            <div className="p-3 bg-emerald-50 rounded-2xl border border-emerald-200/80 flex items-center gap-2 text-emerald-900 text-[11px] font-medium">
+              <ShieldCheck className="w-4 h-4 text-emerald-600 shrink-0" />
+              <span>Hệ thống bảo vệ danh tính học sinh: Bạn sẽ mặc định tham gia thi đua bằng biệt danh an toàn ngộ nghĩnh.</span>
             </div>
 
             <div className="pt-2">
